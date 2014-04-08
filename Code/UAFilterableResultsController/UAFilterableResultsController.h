@@ -1,5 +1,5 @@
 //
-//  DSFilterableDataSource.h
+//  UAFilterableDataSource.h
 //  Kestrel
 //
 //  Created by Rob Amos on 16/10/2013.
@@ -50,7 +50,7 @@
  *
  * This delegate is notified of changes to the data similarly to NSFetchedResultsController. It is also
  * asked for UITableViewDataSource/UICollectionViewDataSource methods that we are unable to provide, such as
- * filterableResultsController:cellForRowWithObject:atIndexPath:.
+ * filterableResultsController:cellForItemWithObject:atIndexPath:.
 **/
 @property (nonatomic, weak) id<UAFilterableResultsControllerDelegate> delegate;
 
@@ -291,7 +291,7 @@
  * @param   primaryKey              The primary key that should match the
  * @returns                         The matching object, or nil if not found.
 **/
-- (id)objectForPrimaryKey:(id)primaryKey;
+- (id)objectWithPrimaryKey:(id)primaryKey;
 
 /**
  * Searches the data arrays for the specified object and returns its index path.

@@ -56,7 +56,7 @@ describe(@"UAFilterableResultsController's UITableViewDataSource support", ^
             UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"TestCell"];
             NSNumber *value = [[controller data] objectAtIndex:2];
 
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value, [NSIndexPath indexPathForRow:2 inSection:0]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value, [NSIndexPath indexPathForRow:2 inSection:0]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:2 inSection:0]] should] equal:cell];
         });
 
@@ -106,7 +106,7 @@ describe(@"UAFilterableResultsController's UITableViewDataSource support", ^
             UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"TestCell"];
             NSDictionary *value = [[controller data] objectAtIndex:2];
 
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value, [NSIndexPath indexPathForRow:2 inSection:0]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value, [NSIndexPath indexPathForRow:2 inSection:0]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:2 inSection:0]] should] equal:cell];
         });
         
@@ -157,11 +157,11 @@ describe(@"UAFilterableResultsController's UITableViewDataSource support", ^
             UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"TestCell"];
 
             NSNumber *value1 = [[[controller data] objectAtIndex:0] objectAtIndex:2];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value1, [NSIndexPath indexPathForRow:2 inSection:0]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value1, [NSIndexPath indexPathForRow:2 inSection:0]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:2 inSection:0]] should] equal:cell];
 
             NSNumber *value2 = [[[controller data] objectAtIndex:1] objectAtIndex:3];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value2, [NSIndexPath indexPathForRow:3 inSection:1]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value2, [NSIndexPath indexPathForRow:3 inSection:1]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:3 inSection:1]] should] equal:cell];
         });
         
@@ -220,11 +220,11 @@ describe(@"UAFilterableResultsController's UITableViewDataSource support", ^
             UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"TestCell"];
 
             NSNumber *value1 = [[[controller data] objectAtIndex:0] objectAtIndex:0];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value1, [NSIndexPath indexPathForRow:0 inSection:0]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value1, [NSIndexPath indexPathForRow:0 inSection:0]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]] should] equal:cell];
             
             NSNumber *value2 = [[[controller data] objectAtIndex:1] objectAtIndex:1];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value2, [NSIndexPath indexPathForRow:1 inSection:1]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value2, [NSIndexPath indexPathForRow:1 inSection:1]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:1]] should] equal:cell];
         });
         
@@ -284,15 +284,15 @@ describe(@"UAFilterableResultsController's UITableViewDataSource support", ^
             UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"TestCell"];
             
             NSNumber *value1 = [[[controller data] objectAtIndex:0] objectAtIndex:2];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value1, [NSIndexPath indexPathForRow:2 inSection:0]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value1, [NSIndexPath indexPathForRow:2 inSection:0]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:2 inSection:0]] should] equal:cell];
             
             NSNumber *value2 = [[[controller data] objectAtIndex:1] objectAtIndex:3];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value2, [NSIndexPath indexPathForRow:3 inSection:1]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value2, [NSIndexPath indexPathForRow:3 inSection:1]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:3 inSection:1]] should] equal:cell];
 
             NSNumber *value3 = [[[controller data] objectAtIndex:2] objectAtIndex:1];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value3, [NSIndexPath indexPathForRow:1 inSection:2]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value3, [NSIndexPath indexPathForRow:1 inSection:2]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:2]] should] equal:cell];
         });
         
@@ -364,15 +364,15 @@ describe(@"UAFilterableResultsController's UITableViewDataSource support", ^
             UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"TestCell"];
             
             NSNumber *value1 = [[[controller data] objectAtIndex:0] objectAtIndex:0];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value1, [NSIndexPath indexPathForRow:0 inSection:0]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value1, [NSIndexPath indexPathForRow:0 inSection:0]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]] should] equal:cell];
             
             NSNumber *value2 = [[[controller data] objectAtIndex:1] objectAtIndex:1];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value2, [NSIndexPath indexPathForRow:1 inSection:1]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value2, [NSIndexPath indexPathForRow:1 inSection:1]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:1]] should] equal:cell];
 
             NSNumber *value3 = [[[controller data] objectAtIndex:2] objectAtIndex:1];
-            [[mockDelegate should] receive:@selector(filterableResultsController:cellForRowWithObject:atIndexPath:) andReturn:cell withArguments:controller, value3, [NSIndexPath indexPathForRow:1 inSection:2]];
+            [[mockDelegate should] receive:@selector(filterableResultsController:cellForItemWithObject:atIndexPath:) andReturn:cell withArguments:controller, value3, [NSIndexPath indexPathForRow:1 inSection:2]];
             [[[controller tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:2]] should] equal:cell];
         });
         

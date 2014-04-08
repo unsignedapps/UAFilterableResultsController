@@ -1,12 +1,12 @@
 //
-//  DSFilterableDataSource.m
+//  UAFilterableDataSource.m
 //  Kestrel
 //
 //  Created by Rob Amos on 16/10/2013.
 //  Copyright (c) 2013 Desto. All rights reserved.
 //
 
-#import "UAFilterableResultsController.h"
+#import <UAFilterableResultsController/UAFilterableResultsController.h>
 #import "NSArray+UAArrayFlattening.h"
 
 #pragma mark Private Methods
@@ -28,8 +28,8 @@
 - (NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key inArray:(NSArray *)data;
 
 - (void)notifyBeginChanges;
-- (void)notifyChangedObject:(id)object atIndexPath:(NSIndexPath *)indexPath forChangeType:(DSFilterableResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath;
-- (void)notifyChangedSectionAtIndex:(NSInteger)sectionIndex forChangeType:(DSFilterableResultsChangeType)type;
+- (void)notifyChangedObject:(id)object atIndexPath:(NSIndexPath *)indexPath forChangeType:(UAFilterableResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath;
+- (void)notifyChangedSectionAtIndex:(NSInteger)sectionIndex forChangeType:(UAFilterableResultsChangeType)type;
 - (void)notifyReload;
 - (void)notifyEndChanges;
 - (void)notifyEndChangesButDontReapplyFilters;
@@ -214,7 +214,7 @@
 
         if (![self isFiltered])
             [self notifyChangedObject:object atIndexPath:nil
-                        forChangeType:DSFilterableResultsChangeInsert
+                        forChangeType:UAFilterableResultsChangeInsert
                          newIndexPath:[NSIndexPath indexPathForRow:((NSInteger)[section count]-1) inSection:((NSInteger)[self.UAData count]-1)]];
         
     } else
@@ -223,7 +223,7 @@
         
         if (![self isFiltered])
             [self notifyChangedObject:object atIndexPath:nil
-                        forChangeType:DSFilterableResultsChangeInsert
+                        forChangeType:UAFilterableResultsChangeInsert
                          newIndexPath:[NSIndexPath indexPathForRow:((NSInteger)[self.UAData count]-1) inSection:0]];
     }
     
@@ -257,7 +257,7 @@
     if (![self isFiltered])
         [self notifyChangedObject:oldObject
                       atIndexPath:indexPath
-                    forChangeType:DSFilterableResultsChangeDelete
+                    forChangeType:UAFilterableResultsChangeDelete
                      newIndexPath:nil];
 
     [self notifyEndChanges];
@@ -315,7 +315,7 @@
         if (![self isFiltered])
             [self notifyChangedObject:newObject
                           atIndexPath:indexPath
-                        forChangeType:DSFilterableResultsChangeUpdate
+                        forChangeType:UAFilterableResultsChangeUpdate
                          newIndexPath:indexPath];
 
     } else
@@ -325,7 +325,7 @@
         if (![self isFiltered])
             [self notifyChangedObject:newObject
                           atIndexPath:[NSIndexPath indexPathForRow:indexPath.row inSection:0]
-                        forChangeType:DSFilterableResultsChangeUpdate
+                        forChangeType:UAFilterableResultsChangeUpdate
                          newIndexPath:[NSIndexPath indexPathForRow:indexPath.row inSection:0]];
     }
     
@@ -424,7 +424,7 @@
         return [data objectAtIndex:(NSUInteger)indexPath.row];
 }
 
-- (id)objectForPrimaryKey:(id)primaryKey
+- (id)objectWithPrimaryKey:(id)primaryKey
 {
     NSAssert(self.UAData != nil, @"Cannot find object in nil data.");
     NSAssert(self.primaryKeyPath != nil, @"Cannot find object using nil primary key path.");
@@ -613,7 +613,7 @@
     
     [self notifyBeginChanges];
     [self.UAData addObject:[[NSMutableArray alloc] initWithArray:section]];
-    [self notifyChangedSectionAtIndex:((NSInteger)[self.UAData count]-1) forChangeType:DSFilterableResultsChangeInsert];
+    [self notifyChangedSectionAtIndex:((NSInteger)[self.UAData count]-1) forChangeType:UAFilterableResultsChangeInsert];
     [self notifyEndChanges];
 }
 
@@ -625,7 +625,7 @@
     
     [self notifyBeginChanges];
     [self.UAData insertObject:[section mutableCopy] atIndex:index];
-    [self notifyChangedSectionAtIndex:(NSInteger)index forChangeType:DSFilterableResultsChangeInsert];
+    [self notifyChangedSectionAtIndex:(NSInteger)index forChangeType:UAFilterableResultsChangeInsert];
     [self notifyEndChanges];
 }
 
@@ -640,7 +640,7 @@
     {
         [self notifyBeginChanges];
         [self.UAData removeObject:section];
-        [self notifyChangedSectionAtIndex:(NSInteger)indexOfSection forChangeType:DSFilterableResultsChangeDelete];
+        [self notifyChangedSectionAtIndex:(NSInteger)indexOfSection forChangeType:UAFilterableResultsChangeDelete];
         [self notifyEndChanges];
     }
 }
@@ -666,7 +666,7 @@
     
     [self notifyBeginChanges];
     [self.UAData replaceObjectAtIndex:(NSUInteger)sectionIndex withObject:newSection];
-    [self notifyChangedSectionAtIndex:sectionIndex forChangeType:DSFilterableResultsChangeUpdate];
+    [self notifyChangedSectionAtIndex:sectionIndex forChangeType:UAFilterableResultsChangeUpdate];
 }
 
 
@@ -828,7 +828,7 @@
     NSLog(@"Change batches: %li", (long)self.changeBatches);
 }
 
-- (void)notifyChangedObject:(id)object atIndexPath:(NSIndexPath *)indexPath forChangeType:(DSFilterableResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath
+- (void)notifyChangedObject:(id)object atIndexPath:(NSIndexPath *)indexPath forChangeType:(UAFilterableResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath
 {
     // not until we've loaded
     if (![self tableViewHasLoaded])
@@ -845,7 +845,7 @@
     }
 }
 
-- (void)notifyChangedSectionAtIndex:(NSInteger)sectionIndex forChangeType:(DSFilterableResultsChangeType)type
+- (void)notifyChangedSectionAtIndex:(NSInteger)sectionIndex forChangeType:(UAFilterableResultsChangeType)type
 {
     // not until we've loaded
     if (![self tableViewHasLoaded])
@@ -943,7 +943,7 @@
             
             // otherwise, we notify about it
             else
-                [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex] forChangeType:DSFilterableResultsChangeDelete newIndexPath:nil];
+                [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeDelete newIndexPath:nil];
         }
         
         [fromMutable addObject:newSection];
@@ -964,7 +964,7 @@
             if (pathInExisting == nil)
             {
                 // nope, lets notify about it
-                [self notifyChangedObject:obj atIndexPath:nil forChangeType:DSFilterableResultsChangeInsert newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+                [self notifyChangedObject:obj atIndexPath:nil forChangeType:UAFilterableResultsChangeInsert newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
                 
                 // does this section exist?
                 if (sectionIndex+1 > [fromMutable count])
@@ -975,11 +975,11 @@
 
                 // is it the same as where we are now?
             } else if (pathInExisting.section == (NSInteger)sectionIndex && pathInExisting.row == (NSInteger)rowIndex)
-                [self notifyChangedObject:obj atIndexPath:[self indexPathOfObject:obj inArray:fromArray] forChangeType:DSFilterableResultsChangeUpdate newIndexPath:nil];
+                [self notifyChangedObject:obj atIndexPath:[self indexPathOfObject:obj inArray:fromArray] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
         
             // nope, tell them where it is now
             else
-                [self notifyChangedObject:obj atIndexPath:pathInExisting forChangeType:DSFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+                [self notifyChangedObject:obj atIndexPath:pathInExisting forChangeType:UAFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
         }
     }
 }

@@ -80,6 +80,6 @@
     } else
         object = [data objectAtIndex:(NSUInteger)indexPath.row];
     
-    return [delegate filterableResultsController:self cellForRowWithObject:object atIndexPath:indexPath];
+    return [delegate filterableResultsController:self cellForItemWithObject:object atIndexPath:indexPath];
 }
 @end
