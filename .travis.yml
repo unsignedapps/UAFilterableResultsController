@@ -1,1 +1,5 @@
 language: objective-c
+xcode_workspace: Code/UAFilterableResultsController.xcworkspace # path to your xcodeproj folder
+xcode_scheme: UAFilterableResultsControllerTests
+before_install:
+    - cd Code && pod install
