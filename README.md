@@ -43,7 +43,7 @@ Say your data looks something like this:
 
 After setting your initial data source, any calls to `-replaceObjects:` or `-mergeObjects:` would look for existing objects with the same `employeeID` and replace those.
 
-If no Primary Key Path is specified, UAFilterableResultsController will just use `isEqual:` when determining quality.
+If no Primary Key Path is specified, UAFilterableResultsController will just use `isEqual:` when determining equality.
 
 ## Installation
 
@@ -123,7 +123,7 @@ In addition to manipulating the individual objects you can manipulate entire sec
 
 UAFilterableResultsController also supports searching the data stack for objects. You can use `-objectAtIndexPath:` or `-objectWithPrimaryKey:` for locating known objects, or `-indexPathOfObject:` or `-indexPathOfObjectWithPrimaryKey:` for finding the location of the objects within the data stack.
 
-You can pull the entire data stack with `-data`, or a all objects within the stack using `-allObjects`.
+You can pull the entire data stack with `-data`, or all objects within the stack using `-allObjects`.
 
 ## Filtering
 
@@ -136,7 +136,9 @@ A `UAFilter` object is a simple wrapper around an `NSPredicate` that allows for 
 You can create a `UAFilter` like so:
 
 ```objc
-UAFilter *filter = [UAFilter filterWithTitle:@"Micro instances" group:@"Instance Types" predicate:[NSPredicate predicateWithFormat:@"instanceType BEGINSWITH[c] \"t1\""]];
+UAFilter *filter = [UAFilter filterWithTitle:@"Micro instances"
+                                       group:@"Instance Types"
+                                   predicate:[NSPredicate predicateWithFormat:@"instanceType BEGINSWITH[c] \"t1\""]];
 
 [self.resultsController addFilter:filter];
 ```
