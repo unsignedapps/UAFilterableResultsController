@@ -417,7 +417,7 @@ typedef void(^BatchUpdateBlock)();
 
 UAFilterableResultsController is provided as open source with no warranty and no guarantee of support. Best efforts are made to address [issues](https://github.com/unsignedapps/UAFilterableResultsController/issues) raised on GitHub.
 
-You can email the author at bok@<github username>.com. Where <github username> should hopefully be apparent from the URL to this repo (https://github.com/unsignedapps/UAFilterableResultsController).
+You can email the author at bok@&lt;github username&gt;.com. Where <github username> should hopefully be apparent from the URL to this repo (https://github.com/unsignedapps/UAFilterableResultsController).
 
 ## Contributions
 
