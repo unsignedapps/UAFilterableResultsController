@@ -1,9 +1,8 @@
 language: objective-c
 xcode_workspace: Code/UAFilterableResultsController.xcworkspace # path to your xcodeproj folder
-xcode_scheme: UAFilterableResultsControllerTests
-before_script:
-  - export LANG=en_US.UTF-8
+xcode_scheme: UAFilterableResultsController
 before_install:
+    - export LANG=en_US.UTF-8
     - gem install cocoapods
     - cd Code && pod install
     - cd ..
