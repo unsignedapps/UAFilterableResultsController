@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Desto. All rights reserved.
 //
 
-#import <UAFilterableResultsController/UAFilterableResultsController.h>
+#import "UAFilterableResultsController.h"
 #import "NSArray+UAArrayFlattening.h"
 
 #pragma mark Private Methods

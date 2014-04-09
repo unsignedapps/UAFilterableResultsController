@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 Desto. All rights reserved.
 //
 
-#import <UAFilterableResultsController/UAFilterableResultsController.h>
+#import "UAFilterableResultsController.h"
 
 @interface UAFilterableResultsController (UITableViewDataSource) <UITableViewDataSource>
 
