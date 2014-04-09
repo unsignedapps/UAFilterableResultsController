@@ -1,5 +1,7 @@
 # UAFilterableResultsController
 
+[![Build Status](https://travis-ci.org/unsignedapps/UAFilterableResultsController.svg?branch=master)](https://travis-ci.org/unsignedapps/UAFilterableResultsController)
+
 This is an implementation of a `NSFetchedResultsController`-style pattern using `NSMutableArray` as the backing store instead of Core Data. It provides methods for manipulation and filtering of the store.
 
 You typically set the `-dataSource` property on your `UITableView` or `UICollectionView` to an instance of UAFilterableResultsController and then feed it changes. Like `NSFetchedResultsController`, this results controller will compute the differences in the data source and notify your `UITableView` or `UICollectionView`, allowing you to animate the changes.
