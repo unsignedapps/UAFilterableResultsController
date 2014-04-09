@@ -237,7 +237,7 @@ If you want to animate the changes in your table you're looking for something li
             break;
             
         case UAFilterableResultsChangeUpdate:
-            [self tableView:self.tableView reloadCellAtIndexPath:indexPath withObject:anObject];
+            // magics
             break;
     }
 }
