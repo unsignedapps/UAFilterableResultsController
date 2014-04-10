@@ -469,6 +469,11 @@
 
 - (NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data
 {
+    return [self indexPathOfObject:object inArray:self.UAData usingKeyPath:self.primaryKeyPath];
+}
+
+- (NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data usingKeyPath:(NSString *)keyPath
+{
     if (data == nil)
         data = self.UAData;
 
@@ -484,7 +489,7 @@
             for (NSUInteger rowCounter = 0; rowCounter < [section count]; rowCounter++)
             {
                 id obj = [section objectAtIndex:rowCounter];
-                if ([self isObject:obj equalToObject:object usingKeyPath:self.primaryKeyPath])
+                if ([self isObject:obj equalToObject:object usingKeyPath:keyPath])
                     return [NSIndexPath indexPathForRow:(NSInteger)rowCounter inSection:(NSInteger)sectionCounter];
             }
         }
@@ -495,7 +500,7 @@
         for (NSUInteger rowCounter = 0; rowCounter < [data count]; rowCounter++)
         {
             id obj = [data objectAtIndex:rowCounter];
-            if ([self isObject:obj equalToObject:object usingKeyPath:self.primaryKeyPath])
+            if ([self isObject:obj equalToObject:object usingKeyPath:keyPath])
                 return [NSIndexPath indexPathForRow:(NSInteger)rowCounter inSection:0];
         }
     }
@@ -921,6 +926,13 @@
 
 - (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray
 {
+    // do we have a primary key? we use an optimised version of this approach if so.
+    if (self.primaryKeyPath != nil)
+    {
+        [self notifyForChangesFrom:fromArray to:toArray usingKeyPath:self.primaryKeyPath];
+        return;
+    }
+
     // we need to make sure they're both 2 dimensional
     if (![self isArrayTwoDimensional:fromArray])
         fromArray = @[ fromArray ];
@@ -938,7 +950,7 @@
             id obj = [section objectAtIndex:rowIndex];
 
             // if it exists in the target we add it
-            if ([self indexPathOfObject:obj inArray:toArray] != nil)
+            if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:nil] != nil)
                 [newSection addObject:obj];
             
             // otherwise, we notify about it
@@ -960,7 +972,7 @@
             id obj = [section objectAtIndex:rowIndex];
             
             // alrighty, does this object exist in the old one?
-            NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromMutable];
+            NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromMutable usingKeyPath:nil];
             if (pathInExisting == nil)
             {
                 // nope, lets notify about it
@@ -975,7 +987,7 @@
 
                 // is it the same as where we are now?
             } else if (pathInExisting.section == (NSInteger)sectionIndex && pathInExisting.row == (NSInteger)rowIndex)
-                [self notifyChangedObject:obj atIndexPath:[self indexPathOfObject:obj inArray:fromArray] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
+                [self notifyChangedObject:obj atIndexPath:[self indexPathOfObject:obj inArray:fromArray usingKeyPath:nil] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
         
             // nope, tell them where it is now
             else
@@ -984,48 +996,87 @@
     }
 }
 
+- (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray usingKeyPath:(NSString *)keyPath
+{
+    // we need to make sure they're both 2 dimensional
+    if (![self isArrayTwoDimensional:fromArray])
+        fromArray = @[ fromArray ];
+    if (![self isArrayTwoDimensional:toArray])
+        toArray = @[ toArray ];
+    
+    // refine it down to just the key paths, if an exception is thrown anywhere there we fall back to the non-optimised method
+    NSArray *originalFromArray = [fromArray copy];
+    NSArray *originalToArray = [toArray copy];
+    @try
+    {
+        fromArray = [fromArray valueForKeyPath:keyPath];
+        toArray = [toArray valueForKeyPath:keyPath];
+
+    } @catch (NSException *exception)
+    {
+        // go back to the originals
+        fromArray = originalFromArray;
+        toArray = originalToArray;
+    }
+
+    // copy the primary keys from everything that exists in both arrays into a mutable array, notify for all the others
+    NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:[fromArray count]];
+    for (NSUInteger sectionIndex = 0; sectionIndex < [fromArray count]; sectionIndex++)
+    {
+        NSArray *section = [fromArray objectAtIndex:sectionIndex];
+        NSArray *originalSection = [originalFromArray objectAtIndex:sectionIndex];
+        NSMutableArray *newSection = [[NSMutableArray alloc] initWithCapacity:0];
+        for (NSUInteger rowIndex = 0; rowIndex < [section count]; rowIndex++)
+        {
+            id obj = [section objectAtIndex:rowIndex];
+            
+            // if it exists in the target we add it
+            if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:nil] != nil)
+                [newSection addObject:obj];
+            
+            // otherwise, we notify about it
+            else
+                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeDelete newIndexPath:nil];
+        }
+        
+        [fromMutable addObject:newSection];
+        newSection = nil;
+    }
+    
+    // now that thats over, we need to loop over the target array and note anything that isn't in the same place as last time
+    for (NSUInteger sectionIndex = 0; sectionIndex < [toArray count]; sectionIndex++)
+    {
+        // now loop over the section
+        NSArray *section = [toArray objectAtIndex:sectionIndex];
+        NSArray *originalSection = [originalToArray objectAtIndex:sectionIndex];
+        for (NSUInteger rowIndex = 0; rowIndex < [section count]; rowIndex++)
+        {
+            id obj = [section objectAtIndex:rowIndex];
+            
+            // alrighty, does this object exist in the old one?
+            NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromMutable usingKeyPath:nil];
+            if (pathInExisting == nil)
+            {
+                // nope, lets notify about it
+                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:nil forChangeType:UAFilterableResultsChangeInsert newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+                
+                // does this section exist?
+                if (sectionIndex+1 > [fromMutable count])
+                    [fromMutable addObject:[[NSMutableArray alloc] initWithCapacity:0]];
+                
+                NSMutableArray *fromSection = [fromMutable objectAtIndex:sectionIndex];
+                [fromSection insertObject:obj atIndex:rowIndex];
+                
+            // is it the same as where we are now?
+            } else if (pathInExisting.section == (NSInteger)sectionIndex && pathInExisting.row == (NSInteger)rowIndex)
+                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:[self indexPathOfObject:obj inArray:fromArray usingKeyPath:nil] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
+            
+            // nope, tell them where it is now
+            else
+                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:pathInExisting forChangeType:UAFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+        }
+    }
+}
+
 @end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

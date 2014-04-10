@@ -17,10 +17,8 @@
 
 SPEC_BEGIN(UAFilterableResultsController_PrimaryKey)
 
-describe(@"UAFilterableResultsController: Basic Data and Retrieval Setting", ^
-{
-    context(@"when testing straight out equality", ^
-    {
+describe(@"UAFilterableResultsController: Basic Data and Retrieval Setting", ^{
+    context(@"when testing straight out equality", ^{
         __block UAFilterableResultsController *controller;
         beforeEach(^{
             

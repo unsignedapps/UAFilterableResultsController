@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A314416018F62E5700352FD6 /* UAFilterableResultsController+ArrayDifferences.m in Sources */ = {isa = PBXBuildFile; fileRef = A314415F18F62E5700352FD6 /* UAFilterableResultsController+ArrayDifferences.m */; };
 		DED868FFFCCD4409BC807D5E /* libPods-UAFilterableResultsControllerTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7BE7B7EA930F45B78F68CA03 /* libPods-UAFilterableResultsControllerTests.a */; };
 		E805FBCF18F4206900474396 /* UAFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = E805FBC718F4206900474396 /* UAFilter.m */; };
 		E805FBD018F4206900474396 /* UAFilterableResultsController.m in Sources */ = {isa = PBXBuildFile; fileRef = E805FBC918F4206900474396 /* UAFilterableResultsController.m */; };
@@ -45,6 +46,7 @@
 /* Begin PBXFileReference section */
 		5772DDBFC0CE4A7BBC323632 /* Pods-UAFilterableResultsControllerTests.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UAFilterableResultsControllerTests.xcconfig"; path = "Pods/Pods-UAFilterableResultsControllerTests.xcconfig"; sourceTree = "<group>"; };
 		7BE7B7EA930F45B78F68CA03 /* libPods-UAFilterableResultsControllerTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-UAFilterableResultsControllerTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A314415F18F62E5700352FD6 /* UAFilterableResultsController+ArrayDifferences.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UAFilterableResultsController+ArrayDifferences.m"; sourceTree = "<group>"; };
 		E805FBC618F4206900474396 /* UAFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAFilter.h; sourceTree = "<group>"; };
 		E805FBC718F4206900474396 /* UAFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAFilter.m; sourceTree = "<group>"; };
 		E805FBC818F4206900474396 /* UAFilterableResultsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAFilterableResultsController.h; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 				E805FBD718F4274700474396 /* UAFilterableResultsController+ObjectManipulation.m */,
 				E805FBD818F4274700474396 /* UAFilterableResultsController+PrimaryKey.m */,
 				E805FBD918F4274700474396 /* UAFilterableResultsController+UITableViewDataSource.m */,
+				A314415F18F62E5700352FD6 /* UAFilterableResultsController+ArrayDifferences.m */,
 				E82BED6618F4200D00A77668 /* Supporting Files */,
 			);
 			path = UAFilterableResultsControllerTests;
@@ -345,6 +348,7 @@
 				E805FBDC18F4274700474396 /* UAFilterableResultsController+PrimaryKey.m in Sources */,
 				E805FBDA18F4274700474396 /* UAFilterableResultsController+BasicData.m in Sources */,
 				E805FBDD18F4274700474396 /* UAFilterableResultsController+UITableViewDataSource.m in Sources */,
+				A314416018F62E5700352FD6 /* UAFilterableResultsController+ArrayDifferences.m in Sources */,
 				E805FBDB18F4274700474396 /* UAFilterableResultsController+ObjectManipulation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
