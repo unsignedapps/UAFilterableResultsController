@@ -1,8 +1,8 @@
 language: objective-c
 before_install:
    - export LANG=en_US.UTF-8
-   - gem install cocoapods
+   - gem install cocoapods -N
    - cd Code && pod install
    - cd ..
-   - gem install xcpretty
-script: xcodebuild -project Code/UAFilterableResultsController.xcworkspace -scheme UAFilterableResultsController -sdk iphonesimulator test | xcpretty -c
+   - gem install xcpretty -N
+script: xcodebuild -workspace Code/UAFilterableResultsController.xcworkspace -scheme UAFilterableResultsController -sdk iphonesimulator test | xcpretty -c
