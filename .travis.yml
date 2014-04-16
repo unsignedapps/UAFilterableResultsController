@@ -1,11 +1,11 @@
 language: objective-c
 xcode_workspace: Code/UAFilterableResultsController.xcworkspace # path to your xcodeproj folder
-xcode_scheme: UAFilterableResultsController
-xcode_sdk: iphonesimulator7.0
-before_install:
-    - export LANG=en_US.UTF-8
-    - brew update
-    - brew upgrade xctool
-    - gem install cocoapods
-    - cd Code && pod install
-    - cd ..
+#xcode_scheme: UAFilterableResultsController
+#xcode_sdk: iphonesimulator7.0
+#before_install:
+#    - export LANG=en_US.UTF-8
+#    - brew update
+#    - brew upgrade xctool
+#    - gem install cocoapods
+#    - cd Code && pod install
+#    - cd ..
