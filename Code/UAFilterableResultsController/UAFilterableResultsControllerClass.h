@@ -1,5 +1,5 @@
 //
-//  UAFilterableDataSource.h
+//  UAFilterableDataSourceClass.h
 //  Kestrel
 //
 //  Created by Rob Amos on 16/10/2013.
@@ -349,6 +349,17 @@
  * @param   section                 An NSArray of objects. Should match an existing section.
 **/
 - (void)removeSection:(NSArray *)section;
+
+/**
+ * Removes the section at the specified index from the array.
+ *
+ * You cannot remove sections from one dimensional arrays.
+ *
+ * The delegate will be notified of the removal of the section, allowing you to animate the changes to your table or collection view.
+ *
+ * @param   sectionIndex            The index of an existing section.
+ **/
+- (void)removeSectionAtIndex:(NSUInteger)sectionIndex;
 
 /**
  * Replaces the specified section with a new section.

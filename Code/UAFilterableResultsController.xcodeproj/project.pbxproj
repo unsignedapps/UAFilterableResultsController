@@ -49,7 +49,7 @@
 		A314415F18F62E5700352FD6 /* UAFilterableResultsController+ArrayDifferences.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UAFilterableResultsController+ArrayDifferences.m"; sourceTree = "<group>"; };
 		E805FBC618F4206900474396 /* UAFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAFilter.h; sourceTree = "<group>"; };
 		E805FBC718F4206900474396 /* UAFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAFilter.m; sourceTree = "<group>"; };
-		E805FBC818F4206900474396 /* UAFilterableResultsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAFilterableResultsController.h; sourceTree = "<group>"; };
+		E805FBC818F4206900474396 /* UAFilterableResultsControllerClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAFilterableResultsControllerClass.h; sourceTree = "<group>"; };
 		E805FBC918F4206900474396 /* UAFilterableResultsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAFilterableResultsController.m; sourceTree = "<group>"; };
 		E805FBCA18F4206900474396 /* UAFilterableResultsController+UICollectionViewDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UAFilterableResultsController+UICollectionViewDataSource.h"; sourceTree = "<group>"; };
 		E805FBCB18F4206900474396 /* UAFilterableResultsController+UICollectionViewDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UAFilterableResultsController+UICollectionViewDataSource.m"; sourceTree = "<group>"; };
@@ -144,7 +144,7 @@
 			children = (
 				E805FBC618F4206900474396 /* UAFilter.h */,
 				E805FBC718F4206900474396 /* UAFilter.m */,
-				E805FBC818F4206900474396 /* UAFilterableResultsController.h */,
+				E805FBC818F4206900474396 /* UAFilterableResultsControllerClass.h */,
 				E805FBC918F4206900474396 /* UAFilterableResultsController.m */,
 				E805FBCA18F4206900474396 /* UAFilterableResultsController+UICollectionViewDataSource.h */,
 				E805FBCB18F4206900474396 /* UAFilterableResultsController+UICollectionViewDataSource.m */,

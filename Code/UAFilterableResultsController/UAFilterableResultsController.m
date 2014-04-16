@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Desto. All rights reserved.
 //
 
-#import "UAFilterableResultsController.h"
+#import "UAFilterableResultsControllerClass.h"
 #import "NSArray+UAArrayFlattening.h"
 
 #pragma mark Private Methods
@@ -641,11 +641,19 @@
     NSParameterAssert(section != nil);
     
     NSUInteger indexOfSection = [self.UAData indexOfObject:section];
-    if (indexOfSection != NSNotFound)
+    [self removeSectionAtIndex:indexOfSection];
+}
+
+- (void)removeSectionAtIndex:(NSUInteger)sectionIndex
+{
+    NSAssert(self.UAData != nil, @"Cannot remove section from nil data.");
+    NSAssert([self isArrayTwoDimensional:self.UAData], @"Cannot remove section from 1D array.");
+
+    if (sectionIndex != NSNotFound)
     {
         [self notifyBeginChanges];
-        [self.UAData removeObject:section];
-        [self notifyChangedSectionAtIndex:(NSInteger)indexOfSection forChangeType:UAFilterableResultsChangeDelete];
+        [self.UAData removeObjectAtIndex:sectionIndex];
+        [self notifyChangedSectionAtIndex:(NSInteger)sectionIndex forChangeType:UAFilterableResultsChangeDelete];
         [self notifyEndChanges];
     }
 }
