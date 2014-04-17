@@ -1,8 +1,9 @@
 language: objective-c
+xcode_workspace: Code/UAFilterableResultsController.xcworkspace
+xcode_scheme: UAFilterableResultsController
+#xcode_sdk: iphonesimulator7.1
 before_install:
    - export LANG=en_US.UTF-8
-   - gem install cocoapods -N
+   - gem install cocoapods
    - cd Code && pod install
    - cd ..
-   - gem install xcpretty -N
-script: xcodebuild -workspace Code/UAFilterableResultsController.xcworkspace -scheme UAFilterableResultsController -sdk iphonesimulator clean build | xcpretty -c
