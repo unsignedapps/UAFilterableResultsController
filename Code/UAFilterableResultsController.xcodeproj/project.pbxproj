@@ -26,7 +26,6 @@
 		E82BED5118F4200D00A77668 /* UAAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E82BED5018F4200D00A77668 /* UAAppDelegate.m */; };
 		E82BED5418F4200D00A77668 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E82BED5218F4200D00A77668 /* Main.storyboard */; };
 		E82BED5718F4200D00A77668 /* UAViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E82BED5618F4200D00A77668 /* UAViewController.m */; };
-		E82BED5918F4200D00A77668 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E82BED5818F4200D00A77668 /* Images.xcassets */; };
 		E82BED6018F4200D00A77668 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E82BED5F18F4200D00A77668 /* XCTest.framework */; };
 		E82BED6118F4200D00A77668 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E82BED4018F4200D00A77668 /* Foundation.framework */; };
 		E82BED6218F4200D00A77668 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E82BED4418F4200D00A77668 /* UIKit.framework */; };
@@ -76,7 +75,6 @@
 		E82BED5318F4200D00A77668 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		E82BED5518F4200D00A77668 /* UAViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UAViewController.h; sourceTree = "<group>"; };
 		E82BED5618F4200D00A77668 /* UAViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UAViewController.m; sourceTree = "<group>"; };
-		E82BED5818F4200D00A77668 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		E82BED5E18F4200D00A77668 /* UAFilterableResultsControllerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UAFilterableResultsControllerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E82BED5F18F4200D00A77668 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		E82BED6718F4200D00A77668 /* UAFilterableResultsControllerTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "UAFilterableResultsControllerTests-Info.plist"; sourceTree = "<group>"; };
@@ -160,7 +158,6 @@
 				E82BED5218F4200D00A77668 /* Main.storyboard */,
 				E82BED5518F4200D00A77668 /* UAViewController.h */,
 				E82BED5618F4200D00A77668 /* UAViewController.m */,
-				E82BED5818F4200D00A77668 /* Images.xcassets */,
 				E82BED4718F4200D00A77668 /* Supporting Files */,
 			);
 			path = UAFilterableResultsController;
@@ -278,7 +275,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E82BED5918F4200D00A77668 /* Images.xcassets in Resources */,
 				E82BED4B18F4200D00A77668 /* InfoPlist.strings in Resources */,
 				E82BED5418F4200D00A77668 /* Main.storyboard in Resources */,
 			);

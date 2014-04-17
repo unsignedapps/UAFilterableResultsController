@@ -5,4 +5,4 @@ before_install:
    - cd Code && pod install
    - cd ..
    - gem install xcpretty -N
-script: xcodebuild -workspace Code/UAFilterableResultsController.xcworkspace -scheme UAFilterableResultsController -sdk iphonesimulator test | xcpretty -c
+script: xcodebuild -workspace Code/UAFilterableResultsController.xcworkspace -scheme UAFilterableResultsController -sdk iphonesimulator clean build | xcpretty -c
