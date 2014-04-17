@@ -1,7 +1,7 @@
 language: objective-c
 xcode_workspace: Code/UAFilterableResultsController.xcworkspace
 xcode_scheme: UAFilterableResultsController
-#xcode_sdk: iphonesimulator7.1
+xcode_sdk: iphonesimulator7.1
 before_install:
    - export LANG=en_US.UTF-8
    - gem install cocoapods
