@@ -4,4 +4,4 @@ before_install:
    - gem install cocoapods
    - cd Code && pod install
    - cd ..
-script: xctool -workspace Code/UAFilterableResultsController.xcworkspace -scheme UAFilterableResultsController -sdk iphonesimulator7.1 -destination 'name=iPhone Retina (4-inch),OS=7.1' build test
+script: xctool -workspace Code/UAFilterableResultsController.xcworkspace -scheme UAFilterableResultsController -sdk iphonesimulator7.1 -destination 'platform=iOS Simulator,name=iPhone Retina (4-inch),OS=7.1' build test
