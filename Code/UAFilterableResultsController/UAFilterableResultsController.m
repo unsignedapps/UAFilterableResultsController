@@ -947,6 +947,26 @@
     if (![self isArrayTwoDimensional:toArray])
         toArray = @[ toArray ];
     
+    // refine it down to just hashes
+    NSMutableDictionary *fromHashDictionary = [[NSMutableDictionary alloc] initWithCapacity:[fromArray count]];
+    NSInteger sectionIndex = 0, rowIndex = 0;
+    for (NSArray *section in fromArray)
+    {
+        for (NSObject<NSObject> *value in section)
+        {
+            NSNumber *hash = [NSNumber numberWithUnsignedInteger:[value hash]];
+            NSMutableSet *objects = [fromHashDictionary objectForKey:hash];
+            if (objects == nil)
+            {
+                objects = [[NSMutableSet alloc] initWithCapacity:0];
+                [fromHashDictionary setObject:objects forKey:hash];
+            }
+            [objects addObject:[NSIndexPath indexPathForRow:rowIndex inSection:sectionIndex]];
+            rowIndex++;
+        }
+        sectionIndex++;
+    }
+    
     // move everything that exists in both arrays into a mutable array, notify for all the others
     NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:[fromArray count]];
     for (NSUInteger sectionIndex = 0; sectionIndex < [fromArray count]; sectionIndex++)
@@ -980,7 +1000,7 @@
             id obj = [section objectAtIndex:rowIndex];
             
             // alrighty, does this object exist in the old one?
-            NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromMutable usingKeyPath:nil];
+            NSIndexPath *pathInExisting = [self indexPathOfObject:obj inHashDictionary:fromHashDictionary ofArray:fromArray];
             if (pathInExisting == nil)
             {
                 // nope, lets notify about it
@@ -995,13 +1015,50 @@
 
                 // is it the same as where we are now?
             } else if (pathInExisting.section == (NSInteger)sectionIndex && pathInExisting.row == (NSInteger)rowIndex)
-                [self notifyChangedObject:obj atIndexPath:[self indexPathOfObject:obj inArray:fromArray usingKeyPath:nil] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
+                [self notifyChangedObject:obj atIndexPath:[self indexPathOfObject:obj inHashDictionary:fromHashDictionary ofArray:fromArray] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
         
             // nope, tell them where it is now
             else
                 [self notifyChangedObject:obj atIndexPath:pathInExisting forChangeType:UAFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
         }
     }
+}
+
+- (NSIndexPath *)indexPathOfObject:(id)object inHashDictionary:(NSDictionary *)hashDictionary ofArray:(NSArray *)fromArray
+{
+    NSParameterAssert(object != nil);
+    NSParameterAssert(hashDictionary != nil);
+    
+    NSSet *matchingObjects = [hashDictionary objectForKey:[NSNumber numberWithUnsignedInteger:[object hash]]];
+    
+    // not found?
+    if (matchingObjects == nil || [matchingObjects count] == 0)
+        return nil;
+    
+    // only one matching hash? awesome, use that
+    if ([matchingObjects count] == 1)
+        return [matchingObjects anyObject];
+    
+    // we can have more than one, a hash must be equal when isEqual: returns YES, but the reverse is not true
+    BOOL isTwoDimensional = [self isArrayTwoDimensional:fromArray];
+    for (NSIndexPath *indexPath in matchingObjects)
+    {
+        if (isTwoDimensional)
+        {
+            NSArray *section = [fromArray objectAtIndex:(NSUInteger)indexPath.section];
+            id matchingObject = [section objectAtIndex:(NSUInteger)indexPath.row];
+            if ([object isEqual:matchingObject])
+                return indexPath;
+        } else
+        {
+            id matchingObject = [fromArray objectAtIndex:(NSUInteger)indexPath.row];
+            if ([object isEqual:matchingObject])
+                return indexPath;
+        }
+    }
+    
+    // no matches
+    return nil;
 }
 
 - (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray usingKeyPath:(NSString *)keyPath
