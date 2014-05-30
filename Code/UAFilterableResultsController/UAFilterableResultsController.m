@@ -215,7 +215,7 @@
         if (![self isFiltered])
             [self notifyChangedObject:object atIndexPath:nil
                         forChangeType:UAFilterableResultsChangeInsert
-                         newIndexPath:[NSIndexPath indexPathForRow:((NSInteger)[section count]-1) inSection:((NSInteger)[self.UAData count]-1)]];
+                         newIndexPath:[NSIndexPath indexPathForRow:((NSInteger)[section count]-1) inSection:(sectionIndex == -1 ? [self.UAData count]-1 : sectionIndex)]];
         
     } else
     {
