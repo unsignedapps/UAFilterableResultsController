@@ -121,6 +121,14 @@ In addition to manipulating the individual objects you can manipulate entire sec
 
 `-addSection:`, `-insertSection:atIndex:`, `-removeSection:`, `-replaceSection:withSection:` and `-replaceSectionAtIndex:withSection:` exist for this purpose. As always, if your delegate is set it will be notified to animate the changes to the table or collection view as appropriate.
 
+### Batching Updates
+
+You can batch updates you make to the objects or structure of your data. Call `-beginUpdates` when you want to start making changes and `-endUpdates` when you are ready to commit the batch.
+
+Batches of updates are sent to your UITableView or UICollectionView when the outermost batch has been ended. You can nest your batches.
+
+Internally, all changes made to objects (especially large-scale merge or replace operations) are batched and submitted to be animated at the same time.
+
 ### Finding Objects
 
 UAFilterableResultsController also supports searching the data stack for objects. You can use `-objectAtIndexPath:` or `-objectWithPrimaryKey:` for locating known objects, or `-indexPathOfObject:` or `-indexPathOfObjectWithPrimaryKey:` for finding the location of the objects within the data stack.
@@ -183,7 +191,7 @@ Make sure you set the `-delegate` on the UAFilterableResultsController instance,
 - (UITableViewCell *)filterableResultsController:(UAFilterableResultsController *)controller cellForItemWithObject:(id)object atIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:@"SomeIdentifier" forIndexPath:indexPath];
-	
+
 	// make magic
 
     return cell;
@@ -207,11 +215,11 @@ If you want to animate the changes in your table you're looking for something li
         case UAFilterableResultsChangeInsert:
             [self.tableView insertSections:[NSIndexSet indexSetWithIndex:(NSUInteger)sectionIndex] withRowAnimation:UITableViewRowAnimationAutomatic];
             break;
-            
+
         case UAFilterableResultsChangeDelete:
             [self.tableView deleteSections:[NSIndexSet indexSetWithIndex:(NSUInteger)sectionIndex] withRowAnimation:UITableViewRowAnimationAutomatic];
             break;
-            
+
         default:
             break;
     }
@@ -224,20 +232,20 @@ If you want to animate the changes in your table you're looking for something li
         case UAFilterableResultsChangeInsert:
             [self.tableView insertRowsAtIndexPaths:@[ newIndexPath ] withRowAnimation:UITableViewRowAnimationAutomatic];
             break;
-            
+
         case UAFilterableResultsChangeDelete:
             // is the row deleted already selected?
             if ([[self.tableView indexPathForSelectedRow] isEqual:indexPath])
                 [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
 
             [self.tableView deleteRowsAtIndexPaths:@[ indexPath ] withRowAnimation:UITableViewRowAnimationAutomatic];
-            
+
             break;
-            
+
         case UAFilterableResultsChangeMove:
             [self.tableView moveRowAtIndexPath:indexPath toIndexPath:newIndexPath];
             break;
-            
+
         case UAFilterableResultsChangeUpdate:
             // magics
             break;
@@ -310,7 +318,7 @@ typedef void(^BatchUpdateBlock)();
 {
     __block MyViewController *blockSelf = self;
     BatchUpdateBlock block = NULL;
-    
+
     switch (type)
     {
         case UAFilterableResultsChangeInsert:
@@ -320,7 +328,7 @@ typedef void(^BatchUpdateBlock)();
                 [blockSelf.collectionView insertSections:[NSIndexSet indexSetWithIndex:(NSUInteger)sectionIndex]];
             };
             break;
-            
+
         case UAFilterableResultsChangeDelete:
 
             block = ^
@@ -332,10 +340,10 @@ typedef void(^BatchUpdateBlock)();
         default:
             break;
     }
-    
+
     if (block == NULL)
         return;
-    
+
     if (self.batchUpdates != nil)
         [self.batchUpdates addObject:block];
     else
@@ -346,7 +354,7 @@ typedef void(^BatchUpdateBlock)();
 {
     __block MyViewController *blockSelf = self;
     BatchUpdateBlock block = NULL;
-    
+
     switch (type)
     {
         case UAFilterableResultsChangeInsert:
@@ -357,17 +365,17 @@ typedef void(^BatchUpdateBlock)();
             };
             break;
         }
-            
+
         case UAFilterableResultsChangeDelete:
         {
             block = ^
             {
                 [blockSelf.collectionView deleteItemsAtIndexPaths:@[ indexPath ]];
             };
-            
+
             break;
         }
-            
+
         case UAFilterableResultsChangeMove:
         {
             block = ^
@@ -386,10 +394,10 @@ typedef void(^BatchUpdateBlock)();
             break;
         }
     }
-    
+
     if (block == NULL)
         return;
-    
+
     if (self.batchUpdates != nil)
         [self.batchUpdates addObject:block];
     else
