@@ -250,6 +250,29 @@
 **/
 - (void)mergeObjects:(NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator;
 
+/** @name Batching Updates **/
+
+/**
+ * Begins an update batch
+ *
+ * Use when you are making multiple updates to the data structure, such as adding or removing objects or sections, and you want
+ * those updates to be submitted to your UITableView/UICollectionView as a single batch for animation.
+ *
+ * Update batches can be nested, but your update will not be sent to the UITableView/UICollectionView until the outer update
+ * batch has been closed using -endUpdates.
+**/
+- (void)beginUpdates;
+
+/**
+ * Ends an update batch
+ *
+ * Use when you are making multiple updates to the data structure, such as adding or removing objects or sections, and you want
+ * those updates to be submitted to your UITableView/UICollectionView as a single batch for animation.
+ *
+ * Update batches can be nested, but your update will not be sent to the UITableView/UICollectionView until the outer update
+ * batch has been closed using -endUpdates.
+**/
+- (void)endUpdates;
 
 /** @name Finding Objects **/
 

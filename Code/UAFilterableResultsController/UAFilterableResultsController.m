@@ -823,6 +823,11 @@
 
 #pragma mark - Delegate Notifications
 
+- (void)beginUpdates
+{
+    [self notifyBeginChanges];
+}
+
 - (void)notifyBeginChanges
 {
     // not until we've loaded
@@ -879,6 +884,11 @@
     id<UAFilterableResultsControllerDelegate> delegate = self.delegate;
     if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerShouldReload:)])
         [delegate filterableResultsControllerShouldReload:self];
+}
+
+- (void)endUpdates
+{
+    [self notifyEndChanges];
 }
 
 - (void)notifyEndChanges
