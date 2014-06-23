@@ -469,7 +469,7 @@
 
 - (NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data
 {
-    return [self indexPathOfObject:object inArray:self.UAData usingKeyPath:self.primaryKeyPath];
+    return [self indexPathOfObject:object inArray:data usingKeyPath:self.primaryKeyPath];
 }
 
 - (NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data usingKeyPath:(NSString *)keyPath
