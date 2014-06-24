@@ -390,7 +390,9 @@
 
 - (id)objectAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSAssert(self.UAData != nil, @"Cannot find object in nil data.");
+    if (self.UAData == nil)
+        return nil;
+
     NSParameterAssert(indexPath != nil);
 
     // 2D Arrays
