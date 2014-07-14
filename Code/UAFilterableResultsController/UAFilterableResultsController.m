@@ -1043,6 +1043,14 @@
     NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:[fromArray count]];
     for (NSUInteger sectionIndex = 0; sectionIndex < [fromArray count]; sectionIndex++)
     {
+        // does this section exist in the target?
+        if (sectionIndex >= [toArray count])
+        {
+            // nope, deleted
+            [self notifyChangedSectionAtIndex:sectionIndex forChangeType:UAFilterableResultsChangeDelete];
+            continue;
+        }
+        
         NSArray *section = [fromArray objectAtIndex:sectionIndex];
         NSArray *originalSection = [originalFromArray objectAtIndex:sectionIndex];
         NSMutableArray *newSection = [[NSMutableArray alloc] initWithCapacity:0];
@@ -1066,6 +1074,14 @@
     // now that thats over, we need to loop over the target array and note anything that isn't in the same place as last time
     for (NSUInteger sectionIndex = 0; sectionIndex < [toArray count]; sectionIndex++)
     {
+        // does this section exist in the source?
+        if (sectionIndex >= [fromArray count])
+        {
+            // nope, lets just add the whole thing in
+            [self notifyChangedSectionAtIndex:sectionIndex forChangeType:UAFilterableResultsChangeInsert];
+            continue;
+        }
+        
         // now loop over the section
         NSArray *section = [toArray objectAtIndex:sectionIndex];
         NSArray *originalSection = [originalToArray objectAtIndex:sectionIndex];
