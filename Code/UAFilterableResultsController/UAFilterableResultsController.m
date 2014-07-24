@@ -511,6 +511,17 @@
     return nil;
 }
 
+- (NSUInteger)indexOfObject:(id)object inArray:(NSArray *)data usingKeyPath:(NSString *)keyPath
+{
+    for (NSUInteger rowCounter = 0; rowCounter < [data count]; rowCounter++)
+    {
+        id obj = [data objectAtIndex:rowCounter];
+        if ([self isObject:obj equalToObject:object usingKeyPath:keyPath])
+            return rowCounter;
+    }
+    return NSNotFound;
+}
+
 - (NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key
 {
     return [self indexPathOfObjectWithPrimaryKey:key inArray:self.UAData];
@@ -680,8 +691,16 @@
     NSParameterAssert(newSection != nil);
     
     [self notifyBeginChanges];
+
+    NSArray *existing = [self.UAData objectAtIndex:(NSUInteger)sectionIndex];
     [self.UAData replaceObjectAtIndex:(NSUInteger)sectionIndex withObject:newSection];
-    [self notifyChangedSectionAtIndex:sectionIndex forChangeType:UAFilterableResultsChangeUpdate];
+
+    if (existing != nil)
+        [self notifyForChangesForSectionAtIndex:sectionIndex from:existing to:newSection];
+    else
+        [self notifyChangedSectionAtIndex:sectionIndex forChangeType:UAFilterableResultsChangeUpdate];
+
+    [self notifyEndChanges];
 }
 
 
@@ -845,7 +864,7 @@
             [delegate filterableResultsControllerWillChangeContent:self];
     }
     [self setChangeBatches:(self.changeBatches + 1)];
-    NSLog(@"Change batches: %li", (long)self.changeBatches);
+//    NSLog(@"Change batches: %li", (long)self.changeBatches);
 }
 
 - (void)notifyChangedObject:(id)object atIndexPath:(NSIndexPath *)indexPath forChangeType:(UAFilterableResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath
@@ -880,6 +899,45 @@
     }
 }
 
+- (void)notifyForChangesForSectionAtIndex:(NSInteger)sectionIndex from:(NSArray *)fromArray to:(NSArray *)toArray
+{
+    // move everything that exists in both arrays into a mutable array, notify for all the others
+    NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:0];
+    for (NSUInteger rowIndex = 0; rowIndex < [fromArray count]; rowIndex++)
+    {
+        id obj = [fromArray objectAtIndex:rowIndex];
+        
+        // if it exists in the target we add it
+        if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:nil] != nil)
+            [fromMutable addObject:obj];
+        
+        // otherwise, we notify about it
+        else
+            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeDelete newIndexPath:nil];
+    }
+    
+    // now that thats over, we need to loop over the target array and note anything that isn't in the same place as last time
+    for (NSUInteger rowIndex = 0; rowIndex < [toArray count]; rowIndex++)
+    {
+        id obj = [toArray objectAtIndex:rowIndex];
+        
+        // alrighty, does this object exist in the old one?
+        NSUInteger indexInExisting = [self indexOfObject:obj inArray:fromArray usingKeyPath:nil];
+        if (indexInExisting == NSNotFound)
+        {
+            // nope, lets notify about it
+            [self notifyChangedObject:obj atIndexPath:nil forChangeType:UAFilterableResultsChangeInsert newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+            
+        // is it the same as where we are now?
+        } else if (indexInExisting == (NSInteger)rowIndex)
+            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
+        
+        // nope, tell them where it is now
+        else
+            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)indexInExisting inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+    }
+}
+
 - (void)notifyReload
 {
     // the only one we can send without being fully loaded
@@ -901,7 +959,7 @@
 
     if (self.changeBatches > 0)
         [self setChangeBatches:(self.changeBatches - 1)];
-    NSLog(@"Change batches: %li", (long)self.changeBatches);
+//    NSLog(@"Change batches: %li", (long)self.changeBatches);
 
     // we only notify for the outer one, not the inner ones
     if (self.changeBatches == 0)
