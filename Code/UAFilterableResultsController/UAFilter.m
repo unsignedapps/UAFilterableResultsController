@@ -39,4 +39,9 @@
     return ([object isKindOfClass:[UAFilter class]] ? [self isEqualToFilter:object] : [super isEqual:object]);
 }
 
+- (NSUInteger)hash
+{
+    return [self.title hash] ^ [self.groupTitle hash];
+}
+
 @end
