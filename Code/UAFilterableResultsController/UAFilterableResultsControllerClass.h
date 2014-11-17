@@ -90,6 +90,31 @@
 - (void)setData:(NSArray *)data;
 
 /**
+ * Replaces existing objects in the array with the supplied objects.
+ *
+ * Objects will be sorted using the supplied comparator.
+ *
+ * The delegate will be notified of the changes to the objects, allowing you to animate the changes to your table or collection view.
+ *
+ * @param   arrayOfObjects          An NSArray of objects.
+ * @param   comparator              A NSComparator object used to sort the objects.
+ **/
+- (void)setData:(NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator;
+
+/**
+ * Replaces existing objects in the array with the supplied objects.
+ *
+ * Objects will be sorted by calling compare: on the values at the sortKeyPath.
+ *
+ * The delegate will be notified of the changes to the objects, allowing you to animate the changes to your table or collection view.
+ *
+ * @param   arrayOfObjects          An NSArray of objects.
+ * @param   sortKeyPath             A key path to sort the objects by. compare: will be called on the values at this keypath.
+ * @param   options                 A mask of NSStringCompareOptions to use during the sort.
+**/
+- (void)setData:(NSArray *)arrayOfObjects sortKeyPath:(NSString *)sortKeyPath sortOptions:(NSStringCompareOptions)options;
+
+/**
  * Returns the data arrays as are they currently used without any applied filters.
 **/
 - (NSArray *)data;
@@ -250,6 +275,27 @@
 **/
 - (void)mergeObjects:(NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator;
 
+
+/**
+ * Merges the existing matching objects in the array with the supplied objects.
+ *
+ * If supplied, the -primaryKeyPath will be used to locate an existing object with the same primary key, otherwise isEqual:
+ * will be used to determine equality.
+ *
+ * This method is particularly useful for merging in changes to known objects from an external data source that have since
+ * changed. The existing objects with the same primary key will be replaced with the ones in this array.
+ *
+ * Objects will be sorted by calling compare: on the values at the sortKeyPath during the merge, so new objects will be added in the appropriate
+ * place in the sorted array. (Use -replaceObjects: if you want new objects to be ignored instead.)
+ *
+ * The delegate will be notified of the changes to the objects, allowing you to animate the changes to your table or collection view.
+ *
+ * @param   arrayOfObjects          An NSArray of objects.
+ * @param   sortKeyPath             A key path to sort the objects by. compare: will be called on the values at this keypath.
+ * @param   options                 A mask of NSStringCompareOptions to use during the sort.
+**/
+- (void)mergeObjects:(NSArray *)arrayOfObjects sortKeyPath:(NSString *)sortKeyPath sortOptions:(NSStringCompareOptions)options;
+
 /** @name Batching Updates **/
 
 /**
@@ -328,6 +374,17 @@
 - (NSIndexPath *)indexPathOfObject:(id)object;
 
 /**
+ * Searches the filtered data arrays for the specified object and returns its index path.
+ *
+ * If supplied, the -primaryKeyPath will be used to locate an existing object with the same primary key as the supplied object,
+ * otherwise isEqual: will be used to determine equality.
+ *
+ * @param   object                  An object to search for.
+ * @returns                         An NSIndexPath to the specified object, or nil if the object cannot be found.
+ **/
+- (NSIndexPath *)filteredIndexPathOfObject:(id)object;
+
+/**
  * Searches the data arrays for the object with the specified primary key and returns the object at that tndex path.
  *
  * Searches the raw data arrays (not the filtered data) for the object whose -valueAtKeyPath: matches the supplied primary key.
@@ -337,6 +394,17 @@
  * @returns                         An NSIndexPath to the specified object, or nil if the object cannot be found.
 **/
 - (NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key;
+
+/**
+ * Searches the data arrays for the object with the specified primary key and returns the object at that tndex path.
+ *
+ * Searches the filtered data arrays (not the raw data) for the object whose -valueAtKeyPath: matches the supplied primary key.
+ * The -primaryKeyPath is used for the comparison. An assertion will be thrown if you have not specified a -primaryKeyPath.
+ *
+ * @param   key                     The primary key value to search for.
+ * @returns                         An NSIndexPath to the specified object, or nil if the object cannot be found.
+**/
+- (NSIndexPath *)filteredIndexPathOfObjectWithPrimaryKey:(id)key;
 
 /** @name Manipulating Sections **/
 

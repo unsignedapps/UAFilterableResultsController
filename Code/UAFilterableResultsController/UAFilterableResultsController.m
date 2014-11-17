@@ -20,6 +20,8 @@
 @property (nonatomic, strong) NSMutableArray *UAAppliedFilters;
 @property (nonatomic, strong) NSMutableArray *filteredData;
 
+@property (nonatomic, strong) NSMutableDictionary *indexPathNotificationMapping;
+
 - (BOOL)isArrayTwoDimensional:(NSArray *)array;
 
 - (BOOL)isObject:(id)object equalToObject:(id)object usingKeyPath:(NSString *)keyPath;
@@ -35,7 +37,7 @@
 - (void)notifyEndChangesButDontReapplyFilters;
 - (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray;
 
-- (void)reapplyFiters;
+- (void)reapplyFilters;
 - (void)applyFilters:(NSArray *)array;
 
 - (BOOL)isFiltered;
@@ -51,7 +53,7 @@
 // Initialisation
 - (id)initWithPrimaryKeyPath:(NSString *)primaryKeyPath delegate:(id<UAFilterableResultsControllerDelegate>)delegate
 {
-    if (self = [self init])
+    if ((self = [self init]))
     {
         [self setPrimaryKeyPath:primaryKeyPath];
         [self setDelegate:delegate];
@@ -64,7 +66,7 @@
 
 - (id)initWithDelegate:(id<UAFilterableResultsControllerDelegate>)delegate
 {
-    if (self = [self init])
+    if ((self = [self init]))
     {
         [self setDelegate:delegate];
         [self setTableViewHasLoaded:NO];
@@ -85,7 +87,7 @@
     if (data == nil)
     {
         [self setUAData:nil];
-        [self setFilteredData:nil];
+        [self setFilteredData:nil notifications:NO];
 
         // notify if there used to be data to delete all of the data
         if (hasExistingData)
@@ -113,7 +115,11 @@
             [self setUAData:replacementData];
             [self notifyEndChanges];
         } else
+        {
             [self setUAData:replacementData];
+            [self reapplyFiltersWithoutNotifying];
+            [self notifyReload];
+        }
 
         replacementData = nil;
 
@@ -132,11 +138,30 @@
 
             [self notifyEndChanges];
         } else
+        {
             [self setUAData:[data mutableCopy]];
+            [self reapplyFiltersWithoutNotifying];
+            [self notifyReload];
+        }
     }
-    
-    if (!hasExistingData)
-        [self notifyReload];
+}
+
+- (void)setData:(NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator
+{
+    if (comparator == NULL)
+        [self setData:arrayOfObjects];
+    else
+        [self setData:[arrayOfObjects sortedArrayUsingComparator:comparator]];
+}
+
+- (void)setData:(NSArray *)arrayOfObjects sortKeyPath:(NSString *)sortKeyPath sortOptions:(NSStringCompareOptions)options
+{
+    [self setData:arrayOfObjects sortComparator:^NSComparisonResult(id obj1, id obj2)
+    {
+        id value1 = [obj1 valueForKeyPath:sortKeyPath];
+        id value2 = [obj2 valueForKeyPath:sortKeyPath];
+        return [value1 compare:value2 options:options];
+    }];
 }
 
 - (NSArray *)data
@@ -146,6 +171,17 @@
 
 - (void)setFilteredData:(NSMutableArray *)filteredData
 {
+    [self setFilteredData:filteredData notifications:YES];
+}
+
+- (void)setFilteredData:(NSMutableArray *)filteredData notifications:(BOOL)notifications
+{
+    if (!notifications)
+    {
+        _filteredData = filteredData;
+        return;
+    }
+
     // adding or changing a filter
     if (filteredData != nil)
     {
@@ -388,6 +424,16 @@
     }
 }
 
+- (void)mergeObjects:(NSArray *)arrayOfObjects sortKeyPath:(NSString *)sortKeyPath sortOptions:(NSStringCompareOptions)options
+{
+    [self mergeObjects:arrayOfObjects sortComparator:^NSComparisonResult(id obj1, id obj2)
+    {
+        id value1 = [obj1 valueForKeyPath:sortKeyPath];
+        id value2 = [obj2 valueForKeyPath:sortKeyPath];
+        return [value1 compare:value2 options:options];
+    }];
+}
+
 - (id)objectAtIndexPath:(NSIndexPath *)indexPath
 {
     if (self.UAData == nil)
@@ -400,11 +446,17 @@
     if ([self isArrayTwoDimensional:data])
     {
         NSArray *section = [data objectAtIndex:(NSUInteger)indexPath.section];
+        
+        if ((NSUInteger)indexPath.row >= [section count])
+            return nil;
+        
         return [section objectAtIndex:(NSUInteger)indexPath.row];
 
     // Plain array
-    } else
+    } else if ((NSUInteger)indexPath.row < [data count])
         return [data objectAtIndex:(NSUInteger)indexPath.row];
+    
+    return nil;
 }
 
 - (id)filteredObjectAtIndexPath:(NSIndexPath *)indexPath
@@ -418,7 +470,13 @@
     NSArray *data = self.filteredData;
     if ([self isArrayTwoDimensional:data])
     {
+        if (indexPath.section >= [data count])
+            return nil;
         NSArray *section = [data objectAtIndex:(NSUInteger)indexPath.section];
+        
+        if (indexPath.row >= [section count])
+            return nil;
+
         return [section objectAtIndex:(NSUInteger)indexPath.row];
         
     // Plain array
@@ -467,6 +525,11 @@
 - (NSIndexPath *)indexPathOfObject:(id)object
 {
     return [self indexPathOfObject:object inArray:self.UAData];
+}
+
+- (NSIndexPath *)filteredIndexPathOfObject:(id)object
+{
+    return [self indexPathOfObject:object inArray:(self.filteredData ?: self.UAData)];
 }
 
 - (NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data
@@ -525,6 +588,11 @@
 - (NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key
 {
     return [self indexPathOfObjectWithPrimaryKey:key inArray:self.UAData];
+}
+
+- (NSIndexPath *)filteredIndexPathOfObjectWithPrimaryKey:(id)key
+{
+    return [self indexPathOfObjectWithPrimaryKey:key inArray:(self.filteredData ?: self.UAData)];
 }
 
 - (NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key inArray:(NSArray *)data
@@ -781,7 +849,13 @@
     [self applyFilters:nil];
 }
 
-- (void)reapplyFiters
+- (void)reapplyFiltersWithoutNotifying
+{
+    if (self.UAAppliedFilters != nil && [self.UAAppliedFilters count] > 0)
+        [self applyFilters:self.UAAppliedFilters notifications:NO];
+}
+
+- (void)reapplyFilters
 {
     if (self.UAAppliedFilters != nil && [self.UAAppliedFilters count] > 0)
         [self applyFilters:self.UAAppliedFilters];
@@ -789,9 +863,14 @@
 
 - (void)applyFilters:(NSArray *)filters
 {
+    [self applyFilters:filters notifications:YES];
+}
+
+- (void)applyFilters:(NSArray *)filters notifications:(BOOL)notifications
+{
     if (filters == nil)
     {
-        [self setFilteredData:nil];
+        [self setFilteredData:nil notifications:notifications];
         return;
     }
     
@@ -819,7 +898,7 @@
             [filteredData addObject:filteredSection];
         }
         
-        [self setFilteredData:filteredData];
+        [self setFilteredData:filteredData notifications:notifications];
 
     // 1D Array
     } else
@@ -833,7 +912,7 @@
                 [filteredData filterUsingPredicate:filter.predicate];
         }
         
-        [self setFilteredData:filteredData];
+        [self setFilteredData:filteredData notifications:notifications];
     }
 }
 
@@ -862,6 +941,8 @@
         id<UAFilterableResultsControllerDelegate> delegate = self.delegate;
         if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerWillChangeContent:)])
             [delegate filterableResultsControllerWillChangeContent:self];
+        
+        [self setIndexPathNotificationMapping:[NSMutableDictionary dictionary]];
     }
     [self setChangeBatches:(self.changeBatches + 1)];
 //    NSLog(@"Change batches: %li", (long)self.changeBatches);
@@ -890,6 +971,35 @@
     if (![self tableViewHasLoaded])
         return;
     
+    // so we changed a section at that index, which means all the rest are pushed down
+    if (type == UAFilterableResultsChangeInsert)
+    {
+        NSInteger sectionCount = (NSInteger)[self.data count] - 1;
+        if (sectionIndex < sectionCount)
+        {
+            for (NSInteger i = sectionIndex; i < sectionCount; i++)
+            {
+                NSIndexPath *newIndexPath = [NSIndexPath indexPathForItem:-1 inSection:i+1];
+                NSIndexPath *oldIndexPath = [NSIndexPath indexPathForItem:-1 inSection:i];
+                [self.indexPathNotificationMapping setObject:oldIndexPath forKey:newIndexPath];
+            }
+        }
+
+    // likewise, all the sections were bumped up
+    } else if (type == UAFilterableResultsChangeDelete)
+    {
+        NSInteger sectionCount = (NSInteger)[self.data count] + 1;
+        if (sectionIndex+1 < sectionCount)
+        {
+            for (NSInteger i = sectionIndex+1; i < sectionCount; i++)
+            {
+                NSIndexPath *newIndexPath = [NSIndexPath indexPathForItem:-1 inSection:i-1];
+                NSIndexPath *oldIndexPath = [NSIndexPath indexPathForItem:-1 inSection:i];
+                [self.indexPathNotificationMapping setObject:oldIndexPath forKey:newIndexPath];
+            }
+        }
+    }
+    
     id<UAFilterableResultsControllerDelegate> delegate = self.delegate;
     if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsController:didChangeSectionAtIndex:forChangeType:)])
     {
@@ -913,7 +1023,7 @@
         
         // otherwise, we notify about it
         else
-            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeDelete newIndexPath:nil];
+            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]] forChangeType:UAFilterableResultsChangeDelete newIndexPath:nil];
     }
     
     // now that thats over, we need to loop over the target array and note anything that isn't in the same place as last time
@@ -926,16 +1036,28 @@
         if (indexInExisting == NSNotFound)
         {
             // nope, lets notify about it
-            [self notifyChangedObject:obj atIndexPath:nil forChangeType:UAFilterableResultsChangeInsert newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+            [self notifyChangedObject:obj atIndexPath:nil forChangeType:UAFilterableResultsChangeInsert newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]]];
             
         // is it the same as where we are now?
         } else if (indexInExisting == (NSInteger)rowIndex)
-            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
+            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
         
         // nope, tell them where it is now
         else
-            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)indexInExisting inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)indexInExisting inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]] forChangeType:UAFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
     }
+}
+
+- (NSInteger)originalSectionIndexForIndex:(NSInteger)sectionIndex
+{
+    if (self.indexPathNotificationMapping == nil || [self.indexPathNotificationMapping count] == 0)
+        return sectionIndex;
+    
+    NSIndexPath *oldIndexPath = [self.indexPathNotificationMapping objectForKey:[NSIndexPath indexPathForItem:-1 inSection:sectionIndex]];
+    if (oldIndexPath != nil)
+        return oldIndexPath.section;
+    
+    return sectionIndex;
 }
 
 - (void)notifyReload
@@ -970,11 +1092,13 @@
             [self setChangeBatches:1];
 
             // reapply filters
-            [self reapplyFiters];
+            [self reapplyFilters];
 
             // increment it again lest the count is out
             [self setChangeBatches:0];
         }
+        
+        [self setIndexPathNotificationMapping:nil];
 
         // Notify the delegate of the impending change
         id delegate = self.delegate;
