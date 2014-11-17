@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Desto. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 
 /**
  * A filter object that is applied to a result set inside the filterable results controller.

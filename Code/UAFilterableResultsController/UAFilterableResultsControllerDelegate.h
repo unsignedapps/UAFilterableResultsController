@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Desto. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+@import UIKit;
 
 typedef NS_ENUM(NSUInteger, UAFilterableResultsChangeType)
 {
