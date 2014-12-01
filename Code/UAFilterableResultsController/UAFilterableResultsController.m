@@ -654,14 +654,20 @@
     // hack for ids and hashes
     if ([anObject isEqual:anotherObject])
         return YES;
-    
-    // no key path supplied? Can't continue further checking.
-    if (keyPath == nil)
-        return NO;
-    
+
     // are they the same class?
     if (![anObject isKindOfClass:[anotherObject class]])
         return NO;
+
+    // no key path supplied? Can't continue further checking.
+    if (keyPath == nil)
+    {
+        // check directly (we already know they're the same class)
+        if ([anObject isKindOfClass:[NSString class]])
+            return [((NSString *)anObject) isEqualToString:anotherObject];
+        
+        return NO;
+    }
     
     // otherwise, get the values at the specified keypath for both and compare those
     @try
@@ -1213,6 +1219,7 @@
     {
         fromArray = [fromArray valueForKeyPath:keyPath];
         toArray = [toArray valueForKeyPath:keyPath];
+        keyPath = nil;
 
     } @catch (NSException *exception)
     {
@@ -1241,7 +1248,7 @@
             id obj = [section objectAtIndex:rowIndex];
             
             // if it exists in the target we add it
-            if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:nil] != nil)
+            if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:keyPath] != nil)
                 [newSection addObject:obj];
             
             // otherwise, we notify about it
@@ -1272,7 +1279,7 @@
             id obj = [section objectAtIndex:rowIndex];
             
             // alrighty, does this object exist in the old one?
-            NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromMutable usingKeyPath:nil];
+            NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromMutable usingKeyPath:keyPath];
             if (pathInExisting == nil)
             {
                 // nope, lets notify about it
@@ -1287,7 +1294,7 @@
                 
             // is it the same as where we are now?
             } else if (pathInExisting.section == (NSInteger)sectionIndex && pathInExisting.row == (NSInteger)rowIndex)
-                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:[self indexPathOfObject:obj inArray:fromArray usingKeyPath:nil] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
+                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:[self indexPathOfObject:obj inArray:fromArray usingKeyPath:keyPath] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
             
             // nope, tell them where it is now
             else
