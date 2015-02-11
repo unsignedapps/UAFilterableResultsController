@@ -1303,5 +1303,52 @@
     }
 }
 
+#pragma mark - Forwarding for unsupported Data Source Methods
+
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+    if ([super respondsToSelector:aSelector])
+        return YES;
+    
+    // if we don't support it but it is an obvious UICollectionViewDataSource or UITableViewDataSource method we should try forwarding it
+    id delegate = self.delegate;
+    
+    // nothing to forward to
+    if (delegate == nil)
+        return NO;
+    
+    NSString *selectorName = NSStringFromSelector(aSelector);
+    if ([selectorName rangeOfString:@"tableView:"].location == 0 || [selectorName rangeOfString:@"collectionView:"].location == 0)
+    {
+        // it is for a collection view or table view method, see if we can pass it
+        if ([delegate respondsToSelector:aSelector])
+            return YES;
+    }
+    
+    // nothing supported
+    return NO;
+}
+
+- (id)forwardingTargetForSelector:(SEL)aSelector
+{
+    // if we don't support it but it is an obvious UICollectionViewDataSource or UITableViewDataSource method we should try forwarding it
+    id delegate = self.delegate;
+    
+    // nothing to forward to
+    if (delegate == nil)
+        return nil;
+    
+    NSString *selectorName = NSStringFromSelector(aSelector);
+    if ([selectorName rangeOfString:@"tableView:"].location == 0 || [selectorName rangeOfString:@"collectionView:"].location == 0)
+    {
+        // it is for a collection view or table view method, see if we can pass it
+        if ([delegate respondsToSelector:aSelector])
+            return delegate;
+    }
+    
+    // nothing supported
+    return nil;
+}
+
 @end
 
