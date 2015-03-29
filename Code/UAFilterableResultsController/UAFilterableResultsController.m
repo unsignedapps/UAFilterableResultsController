@@ -613,8 +613,10 @@
 
     if (data == nil)
         data = self.UAData;
+
+    if (data == nil)
+        return nil;
     
-    NSAssert(data != nil, @"Cannot find index path of object in nil data.");
     NSAssert(self.primaryKeyPath != nil, @"Cannot find object using nil primary key path.");
     NSParameterAssert(key != nil);
     
