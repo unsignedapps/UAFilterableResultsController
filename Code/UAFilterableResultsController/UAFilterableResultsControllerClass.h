@@ -275,6 +275,10 @@
 **/
 - (void)mergeObjects:(NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator;
 
+/**
+ * Returns the total number of objects currently within the results controller.
+**/
+- (NSUInteger)numberOfObjects;
 
 /**
  * Merges the existing matching objects in the array with the supplied objects.

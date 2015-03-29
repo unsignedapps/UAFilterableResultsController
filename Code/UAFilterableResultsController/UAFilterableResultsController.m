@@ -659,6 +659,24 @@
     return nil;
 }
 
+- (NSUInteger)numberOfObjects
+{
+    NSArray *data = self.UAData;
+    if (data == nil || [data count] == 0)
+        return 0;
+
+    // not 2D?
+    if (![self isArrayTwoDimensional:data])
+        return [data count];
+
+    // definitely 2D. Add them up.
+    NSUInteger count = 0;
+    for (NSArray *section in data)
+        count += [section count];
+    
+    return count;
+}
+
 #pragma mark - Object Comparison
 
 - (BOOL)isObject:(id)anObject equalToObject:(id)anotherObject usingKeyPath:(NSString *)keyPath
