@@ -156,11 +156,21 @@
 
 - (void)setData:(NSArray *)arrayOfObjects sortKeyPath:(NSString *)sortKeyPath sortOptions:(NSStringCompareOptions)options
 {
+    __block NSArray *keyPaths = [sortKeyPath componentsSeparatedByString:@","];
+
     [self setData:arrayOfObjects sortComparator:^NSComparisonResult(id obj1, id obj2)
     {
-        id value1 = [obj1 valueForKeyPath:sortKeyPath];
-        id value2 = [obj2 valueForKeyPath:sortKeyPath];
-        return [value1 compare:value2 options:options];
+        for (NSString *path in keyPaths)
+        {
+            id value1 = [obj1 valueForKeyPath:path];
+            id value2 = [obj2 valueForKeyPath:path];
+            
+            NSComparisonResult result = [value1 compare:value2 options:options];
+            if (result != NSOrderedSame)
+                return result;
+        }
+        
+        return NSOrderedSame;
     }];
 }
 
