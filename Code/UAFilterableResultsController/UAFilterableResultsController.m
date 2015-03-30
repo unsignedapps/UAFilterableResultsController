@@ -48,7 +48,7 @@
 
 @implementation UAFilterableResultsController
 
-@synthesize primaryKeyPath=_primaryKeyPath, delegate=_delegate, UAData=_UAData, changeBatches=_changeBatches, UAAppliedFilters=_UAAppliedFilters;
+@synthesize primaryKeyPath=_primaryKeyPath, delegate=_delegate, UAData=_UAData, changeBatches=_changeBatches, UAAppliedFilters=_UAAppliedFilters, updatesEnabled=_updatesEnabled;
 
 // Initialisation
 - (id)initWithPrimaryKeyPath:(NSString *)primaryKeyPath delegate:(id<UAFilterableResultsControllerDelegate>)delegate
@@ -60,6 +60,7 @@
         [self setTableViewHasLoaded:NO];
         [self setChangeBatches:0];
         [self setUAAppliedFilters:[[NSMutableArray alloc] initWithCapacity:0]];
+        [self setUpdatesEnabled:YES];
     }
     return self;
 }
@@ -72,6 +73,7 @@
         [self setTableViewHasLoaded:NO];
         [self setChangeBatches:0];
         [self setUAAppliedFilters:[[NSMutableArray alloc] initWithCapacity:0]];
+        [self setUpdatesEnabled:YES];
     }
     return self;
 }
@@ -966,6 +968,9 @@
 
 - (void)notifyBeginChanges
 {
+    if (![self areUpdatesEnabled])
+        return;
+
     // not until we've loaded
     if (![self tableViewHasLoaded])
         return;
@@ -986,6 +991,9 @@
 
 - (void)notifyChangedObject:(id)object atIndexPath:(NSIndexPath *)indexPath forChangeType:(UAFilterableResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath
 {
+    if (![self areUpdatesEnabled])
+        return;
+    
     // not until we've loaded
     if (![self tableViewHasLoaded])
         return;
@@ -1003,6 +1011,9 @@
 
 - (void)notifyChangedSectionAtIndex:(NSInteger)sectionIndex forChangeType:(UAFilterableResultsChangeType)type
 {
+    if (![self areUpdatesEnabled])
+        return;
+    
     // not until we've loaded
     if (![self tableViewHasLoaded])
         return;
@@ -1047,6 +1058,9 @@
 
 - (void)notifyForChangesForSectionAtIndex:(NSInteger)sectionIndex from:(NSArray *)fromArray to:(NSArray *)toArray
 {
+    if (![self areUpdatesEnabled])
+        return;
+    
     // move everything that exists in both arrays into a mutable array, notify for all the others
     NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:0];
     for (NSUInteger rowIndex = 0; rowIndex < [fromArray count]; rowIndex++)
@@ -1098,6 +1112,9 @@
 
 - (void)notifyReload
 {
+    if (![self areUpdatesEnabled])
+        return;
+    
     // the only one we can send without being fully loaded
     id<UAFilterableResultsControllerDelegate> delegate = self.delegate;
     if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerShouldReload:)])
@@ -1111,6 +1128,9 @@
 
 - (void)notifyEndChanges
 {
+    if (![self areUpdatesEnabled])
+        return;
+    
     // not until we've loaded
     if (![self tableViewHasLoaded])
         return;
@@ -1145,6 +1165,9 @@
 
 - (void)notifyEndChangesButDontReapplyFilters
 {
+    if (![self areUpdatesEnabled])
+        return;
+    
     // not until we've loaded
     if (![self tableViewHasLoaded])
         return;
@@ -1164,6 +1187,9 @@
 
 - (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray
 {
+    if (![self areUpdatesEnabled])
+        return;
+    
     // do we have a primary key? we use an optimised version of this approach if so.
     if (self.primaryKeyPath != nil)
     {
@@ -1236,6 +1262,9 @@
 
 - (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray usingKeyPath:(NSString *)keyPath
 {
+    if (![self areUpdatesEnabled])
+        return;
+    
     // we need to make sure they're both 2 dimensional
     if (![self isArrayTwoDimensional:fromArray])
         fromArray = @[ fromArray ];

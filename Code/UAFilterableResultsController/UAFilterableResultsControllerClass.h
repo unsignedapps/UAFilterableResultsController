@@ -303,6 +303,14 @@
 /** @name Batching Updates **/
 
 /**
+ * Whether or not updates are enabled.
+ *
+ * Use this when you want to make changes to the data structure without sending updates to the delegate. This is set to YES
+ * by default.
+**/
+@property (nonatomic, getter=areUpdatesEnabled) BOOL updatesEnabled;
+
+/**
  * Begins an update batch
  *
  * Use when you are making multiple updates to the data structure, such as adding or removing objects or sections, and you want
