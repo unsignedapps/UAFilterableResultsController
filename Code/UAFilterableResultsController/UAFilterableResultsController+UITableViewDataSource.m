@@ -8,16 +8,11 @@
 
 #import "UAFilterableResultsController+UITableViewDataSource.h"
 
-@interface UAFilterableResultsController (UAFilterableResultsControllerInternalMethods)
+#pragma mark Private Methods
 
-- (NSMutableArray *)UAData;
-- (NSMutableArray *)filteredData;
-- (BOOL)isArrayTwoDimensional:(NSArray *)array;
+#import "UAFilterableResultsController+Private.h"
 
-- (BOOL)tableViewHasLoaded;
-- (void)setTableViewHasLoaded:(BOOL)tableViewHasLoaded;
 
-@end
 
 
 @implementation UAFilterableResultsController (UITableViewDataSource)

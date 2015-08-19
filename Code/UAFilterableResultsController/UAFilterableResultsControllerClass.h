@@ -10,6 +10,8 @@
 #import "UAFilterableResultsControllerDelegate.h"
 #import "UAFilter.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  * UAFilterableResultsController
  *
@@ -29,7 +31,7 @@
  * Additionally, if you specify the primaryKeyPath, UAFilterableResultsController will attempt to complete operations
  * by comparing the value at the specified key path, instead of using raw isEqual:.
 **/
-@interface UAFilterableResultsController : NSObject
+@interface UAFilterableResultsController : NSObject 
 
 /** @name Initialisation **/
 
@@ -61,7 +63,7 @@
  * @param   delegate                An object that implements <UAFilterableResultsControllerDelegate>.
  * @returns                         Initialised UAFilterableResultsController object.
 **/
-- (id)initWithPrimaryKeyPath:(NSString *)primaryKeyPath delegate:(id<UAFilterableResultsControllerDelegate>)delegate;
+- (id)initWithPrimaryKeyPath:(nullable NSString *)primaryKeyPath delegate:(nullable id<UAFilterableResultsControllerDelegate>)delegate;
 
 /**
  * Initialises the UAFilterableResultsController with a delegate.
@@ -73,6 +75,28 @@
 
 
 /** @name Manipulating Objects **/
+
+/**
+ * Getter:
+ *
+ * Returns the data arrays as are they currently used without any applied filters.
+ *
+ * Setter:
+ *
+ * Replaces the entire data array with the supplied data.
+ *
+ * Changes between the existing data and the new data will be tracked.
+ *
+ * Your delegate (if set) will be notified to:
+ *  - if there is a nil existing data set, to reload the table or collection view;
+ *  - otherwise, of any individual changes, allowing you to animate them as required.
+ *
+ * Any filters that have been applied to the existing data will be re-applied to the new data.
+ *
+ * @param   data                    A one or two dimensional array of data objects.
+ *
+ **/
+@property (nonatomic,null_resettable) NSArray * data;
 
 /**
  * Replaces the entire data array with the supplied data.
@@ -87,7 +111,7 @@
  *
  * @param   data                    A one or two dimensional array of data objects.
 **/
-- (void)setData:(NSArray *)data;
+- (void)setData:(nullable NSArray * )data;
 
 /**
  * Replaces existing objects in the array with the supplied objects.
@@ -99,7 +123,7 @@
  * @param   arrayOfObjects          An NSArray of objects.
  * @param   comparator              A NSComparator object used to sort the objects.
  **/
-- (void)setData:(NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator;
+- (void)setData:(nullable NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator;
 
 /**
  * Replaces existing objects in the array with the supplied objects.
@@ -273,7 +297,7 @@
  * @param   arrayOfObjects          An NSArray of objects.
  * @param   comparator              A NSComparator object used to sort the objects.
 **/
-- (void)mergeObjects:(NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator;
+- (void)mergeObjects:(NSArray *)arrayOfObjects sortComparator:(nullable NSComparator)comparator;
 
 /**
  * Returns the total number of objects currently within the results controller.
@@ -346,7 +370,7 @@
  * @param   indexPath               The NSIndexPath to the object that you want to find.
  * @returns                         The specified object. Triggers an out of bounds exception if the index path is not valid.
 **/
-- (id)objectAtIndexPath:(NSIndexPath *)indexPath;
+- (nullable id)objectAtIndexPath:(NSIndexPath *)indexPath;
 
 /**
  * Returns the object at the specified index path of the filtered data.
@@ -359,7 +383,7 @@
  * @param   indexPath               The NSIndexPath to the object that you want to find.
  * @returns                         The specified object. Triggers an out of bounds exception if the index path is not valid.
 **/
-- (id)filteredObjectAtIndexPath:(NSIndexPath *)indexPath;
+- (nullable id)filteredObjectAtIndexPath:(NSIndexPath *)indexPath;
 
 /**
  * Returns the object that has the specified primary key.
@@ -372,7 +396,7 @@
  * @param   primaryKey              The primary key that should match the
  * @returns                         The matching object, or nil if not found.
 **/
-- (id)objectWithPrimaryKey:(id)primaryKey;
+- (nullable id)objectWithPrimaryKey:(id)primaryKey;
 
 /**
  * Searches the data arrays for the specified object and returns its index path.
@@ -383,7 +407,7 @@
  * @param   object                  An object to search for.
  * @returns                         An NSIndexPath to the specified object, or nil if the object cannot be found.
 **/
-- (NSIndexPath *)indexPathOfObject:(id)object;
+- (nullable NSIndexPath *)indexPathOfObject:(id)object;
 
 /**
  * Searches the filtered data arrays for the specified object and returns its index path.
@@ -394,7 +418,7 @@
  * @param   object                  An object to search for.
  * @returns                         An NSIndexPath to the specified object, or nil if the object cannot be found.
  **/
-- (NSIndexPath *)filteredIndexPathOfObject:(id)object;
+- (nullable NSIndexPath *)filteredIndexPathOfObject:(id)object;
 
 /**
  * Searches the data arrays for the object with the specified primary key and returns the object at that tndex path.
@@ -405,7 +429,7 @@
  * @param   key                     The primary key value to search for.
  * @returns                         An NSIndexPath to the specified object, or nil if the object cannot be found.
 **/
-- (NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key;
+- (nullable NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key;
 
 /**
  * Searches the data arrays for the object with the specified primary key and returns the object at that tndex path.
@@ -416,7 +440,7 @@
  * @param   key                     The primary key value to search for.
  * @returns                         An NSIndexPath to the specified object, or nil if the object cannot be found.
 **/
-- (NSIndexPath *)filteredIndexPathOfObjectWithPrimaryKey:(id)key;
+- (nullable NSIndexPath *)filteredIndexPathOfObjectWithPrimaryKey:(id)key;
 
 /** @name Manipulating Sections **/
 
@@ -549,5 +573,7 @@
  * Returns all of the existing filters.
 **/
 - (NSArray *)appliedFilters;
+
+NS_ASSUME_NONNULL_END
 
 @end

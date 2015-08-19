@@ -9,17 +9,9 @@
 #import <Kiwi/Kiwi.h>
 #import "UAFilterableResultsController.h"
 
-// If we import the header it still doesn't believe that we implement the protocol and these
-// methods are available.
-@interface UAFilterableResultsController (UITableViewDataSourceTests) <UITableViewDataSource>
+#import "UAFilterableResultsController+Private.h"
+#import "UAFilterableResultsController+UITableViewDataSource.h"
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section;
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section;
-- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section;
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
-
-@end
 
 SPEC_BEGIN(UAFilterableResultsController_UITableViewDataSource)
 

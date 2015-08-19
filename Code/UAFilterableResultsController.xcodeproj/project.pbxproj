@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A314416018F62E5700352FD6 /* UAFilterableResultsController+ArrayDifferences.m in Sources */ = {isa = PBXBuildFile; fileRef = A314415F18F62E5700352FD6 /* UAFilterableResultsController+ArrayDifferences.m */; };
+		C32EC4BF1B83932500A19395 /* UAFilterableResultsController+Private.m in Sources */ = {isa = PBXBuildFile; fileRef = C32EC4BE1B83932500A19395 /* UAFilterableResultsController+Private.m */; };
 		DED868FFFCCD4409BC807D5E /* libPods-UAFilterableResultsControllerTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7BE7B7EA930F45B78F68CA03 /* libPods-UAFilterableResultsControllerTests.a */; };
 		E805FBCF18F4206900474396 /* UAFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = E805FBC718F4206900474396 /* UAFilter.m */; };
 		E805FBD018F4206900474396 /* UAFilterableResultsController.m in Sources */ = {isa = PBXBuildFile; fileRef = E805FBC918F4206900474396 /* UAFilterableResultsController.m */; };
@@ -43,10 +44,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5772DDBFC0CE4A7BBC323632 /* Pods-UAFilterableResultsControllerTests.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UAFilterableResultsControllerTests.xcconfig"; path = "Pods/Pods-UAFilterableResultsControllerTests.xcconfig"; sourceTree = "<group>"; };
+		4CE40787B64C7FA019781FA2 /* Pods-UAFilterableResultsControllerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UAFilterableResultsControllerTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-UAFilterableResultsControllerTests/Pods-UAFilterableResultsControllerTests.release.xcconfig"; sourceTree = "<group>"; };
 		7BE7B7EA930F45B78F68CA03 /* libPods-UAFilterableResultsControllerTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-UAFilterableResultsControllerTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A314415F18F62E5700352FD6 /* UAFilterableResultsController+ArrayDifferences.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UAFilterableResultsController+ArrayDifferences.m"; sourceTree = "<group>"; };
 		A3C6A9C218FE4289004443FB /* UAFilterableResultsController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UAFilterableResultsController.h; sourceTree = "<group>"; };
+		C32EC4BD1B83932500A19395 /* UAFilterableResultsController+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UAFilterableResultsController+Private.h"; sourceTree = "<group>"; };
+		C32EC4BE1B83932500A19395 /* UAFilterableResultsController+Private.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UAFilterableResultsController+Private.m"; sourceTree = "<group>"; };
+		D6579EF60B4014AC84AAD5D2 /* Pods-UAFilterableResultsControllerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UAFilterableResultsControllerTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-UAFilterableResultsControllerTests/Pods-UAFilterableResultsControllerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		E805FBC618F4206900474396 /* UAFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAFilter.h; sourceTree = "<group>"; };
 		E805FBC718F4206900474396 /* UAFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAFilter.m; sourceTree = "<group>"; };
 		E805FBC818F4206900474396 /* UAFilterableResultsControllerClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAFilterableResultsControllerClass.h; sourceTree = "<group>"; };
@@ -106,6 +110,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		29CB12B91CCD10B1C1E9BE25 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D6579EF60B4014AC84AAD5D2 /* Pods-UAFilterableResultsControllerTests.debug.xcconfig */,
+				4CE40787B64C7FA019781FA2 /* Pods-UAFilterableResultsControllerTests.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
 		E82BED3418F4200C00A77668 = {
 			isa = PBXGroup;
 			children = (
@@ -113,7 +126,7 @@
 				E82BED6518F4200D00A77668 /* UAFilterableResultsControllerTests */,
 				E82BED3F18F4200D00A77668 /* Frameworks */,
 				E82BED3E18F4200D00A77668 /* Products */,
-				5772DDBFC0CE4A7BBC323632 /* Pods-UAFilterableResultsControllerTests.xcconfig */,
+				29CB12B91CCD10B1C1E9BE25 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -146,6 +159,8 @@
 				A3C6A9C218FE4289004443FB /* UAFilterableResultsController.h */,
 				E805FBC818F4206900474396 /* UAFilterableResultsControllerClass.h */,
 				E805FBC918F4206900474396 /* UAFilterableResultsController.m */,
+				C32EC4BD1B83932500A19395 /* UAFilterableResultsController+Private.h */,
+				C32EC4BE1B83932500A19395 /* UAFilterableResultsController+Private.m */,
 				E805FBCA18F4206900474396 /* UAFilterableResultsController+UICollectionViewDataSource.h */,
 				E805FBCB18F4206900474396 /* UAFilterableResultsController+UICollectionViewDataSource.m */,
 				E805FBCC18F4206900474396 /* UAFilterableResultsController+UITableViewDataSource.h */,
@@ -318,7 +333,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Pods-UAFilterableResultsControllerTests-resources.sh\"\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-UAFilterableResultsControllerTests/Pods-UAFilterableResultsControllerTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -328,6 +343,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C32EC4BF1B83932500A19395 /* UAFilterableResultsController+Private.m in Sources */,
 				E805FBD218F4206900474396 /* UAFilterableResultsController+UITableViewDataSource.m in Sources */,
 				E82BED5118F4200D00A77668 /* UAAppDelegate.m in Sources */,
 				E805FBCF18F4206900474396 /* UAFilter.m in Sources */,
@@ -489,7 +505,7 @@
 		};
 		E82BED7318F4200D00A77668 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5772DDBFC0CE4A7BBC323632 /* Pods-UAFilterableResultsControllerTests.xcconfig */;
+			baseConfigurationReference = D6579EF60B4014AC84AAD5D2 /* Pods-UAFilterableResultsControllerTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/UAFilterableResultsController.app/UAFilterableResultsController";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -512,7 +528,7 @@
 		};
 		E82BED7418F4200D00A77668 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5772DDBFC0CE4A7BBC323632 /* Pods-UAFilterableResultsControllerTests.xcconfig */;
+			baseConfigurationReference = 4CE40787B64C7FA019781FA2 /* Pods-UAFilterableResultsControllerTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/UAFilterableResultsController.app/UAFilterableResultsController";
 				FRAMEWORK_SEARCH_PATHS = (

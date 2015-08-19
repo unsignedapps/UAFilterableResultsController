@@ -9,11 +9,8 @@
 #import <Kiwi/Kiwi.h>
 #import "UAFilterableResultsController.h"
 
-@interface UAFilterableResultsController (TestingMethods)
+#import "UAFilterableResultsController+Private.h"
 
-- (BOOL)isObject:(id)object equalToObject:(id)object usingKeyPath:(NSString *)keyPath;
-
-@end
 
 SPEC_BEGIN(UAFilterableResultsController_PrimaryKey)
 
