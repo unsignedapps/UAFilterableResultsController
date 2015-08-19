@@ -24,28 +24,31 @@
         return 0;
     
     // we have data!
-    [self setTableViewHasLoaded:YES];
+    self.tableViewHasLoaded = YES;
     
     NSArray *data = self.filteredData ?: self.UAData;
     
     // let the delegate know if we're about to display no rows
-    if ([data count] == 0)
+    if (data.count == 0)
     {
         id<UAFilterableResultsControllerDelegate> delegate = self.delegate;
-        if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsController:hasNoDataForLoadingCollectionView:)])
+        if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsController:hasNoDataForLoadingCollectionView:)]) {
             [delegate filterableResultsController:self hasNoDataForLoadingCollectionView:collectionView];
+        }
     }
     
-    return [self isArrayTwoDimensional:data] ? (NSInteger)[data count] : 1;
+    return [self isArrayTwoDimensional:data] ? (NSInteger)data.count : 1;
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
     NSArray *data = self.filteredData ?: self.UAData;
-    if ([self isArrayTwoDimensional:data])
-        return (NSInteger)[[data objectAtIndex:(NSUInteger)section] count];
-    else
-        return (NSInteger)[data count];
+    if ([self isArrayTwoDimensional:data]) {
+        NSArray * rows = data[section];
+        return (NSInteger)rows.count;
+    } else {
+        return (NSInteger)data.count;
+    }
 }
 
 - (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
@@ -67,12 +70,13 @@
     id object = nil;
     if ([self isArrayTwoDimensional:data])
     {
-        NSArray *section = [data objectAtIndex:(NSUInteger)indexPath.section];
-        object = [section objectAtIndex:(NSUInteger)indexPath.row];
+        NSArray *section = data[indexPath.section];
+        object = section[indexPath.row];
         
         // 1D Array
-    } else
-        object = [data objectAtIndex:(NSUInteger)indexPath.row];
+    } else {
+        object = data[indexPath.row];
+    }
     
     return [delegate filterableResultsController:self cellForItemWithObject:object atIndexPath:indexPath];
 }
