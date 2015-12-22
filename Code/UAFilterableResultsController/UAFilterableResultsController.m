@@ -1246,7 +1246,7 @@
             id obj = [section objectAtIndex:rowIndex];
             
             // alrighty, does this object exist in the old one?
-            NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromMutable usingKeyPath:nil];
+            NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromArray usingKeyPath:nil];
             if (pathInExisting == nil)
             {
                 // nope, lets notify about it
