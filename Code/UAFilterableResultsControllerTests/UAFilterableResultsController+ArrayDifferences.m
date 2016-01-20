@@ -9,12 +9,9 @@
 #import <Kiwi/Kiwi.h>
 #import "UAFilterableResultsController.h"
 
-@interface UAFilterableResultsController (TestingMethods)
+#import "UAFilterableResultsController+Private.h"
 
-- (BOOL)isObject:(id)object equalToObject:(id)object usingKeyPath:(NSString *)keyPath;
-- (void)setTableViewHasLoaded:(BOOL)tableViewHasLoaded;
 
-@end
 
 SPEC_BEGIN(UAFilterableResultsController_ArrayDifferences)
 

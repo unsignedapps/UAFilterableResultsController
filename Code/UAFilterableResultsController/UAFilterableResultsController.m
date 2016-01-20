@@ -11,114 +11,75 @@
 
 #pragma mark Private Methods
 
-@interface UAFilterableResultsController ()
+#import "UAFilterableResultsController+Private.h"
 
-@property (nonatomic, strong) NSMutableArray *UAData;
-@property (nonatomic) BOOL tableViewHasLoaded;
-@property (nonatomic) NSInteger changeBatches;
-
-@property (nonatomic, strong) NSMutableArray *UAAppliedFilters;
-@property (nonatomic, strong) NSMutableArray *filteredData;
-
-@property (nonatomic, strong) NSMutableDictionary *indexPathNotificationMapping;
-
-- (BOOL)isArrayTwoDimensional:(NSArray *)array;
-
-- (BOOL)isObject:(id)object equalToObject:(id)object usingKeyPath:(NSString *)keyPath;
-
-- (NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data;
-- (NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key inArray:(NSArray *)data;
-
-- (void)notifyBeginChanges;
-- (void)notifyChangedObject:(id)object atIndexPath:(NSIndexPath *)indexPath forChangeType:(UAFilterableResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath;
-- (void)notifyChangedSectionAtIndex:(NSInteger)sectionIndex forChangeType:(UAFilterableResultsChangeType)type;
-- (void)notifyReload;
-- (void)notifyEndChanges;
-- (void)notifyEndChangesButDontReapplyFilters;
-- (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray;
-
-- (void)reapplyFilters;
-- (void)applyFilters:(NSArray *)array;
-
-- (BOOL)isFiltered;
-
-@end
 
 #pragma mark - Implementation
-
+NS_ASSUME_NONNULL_BEGIN
 @implementation UAFilterableResultsController
 
-@synthesize primaryKeyPath=_primaryKeyPath, delegate=_delegate, UAData=_UAData, changeBatches=_changeBatches, UAAppliedFilters=_UAAppliedFilters, updatesEnabled=_updatesEnabled;
-
 // Initialisation
-- (id)initWithPrimaryKeyPath:(NSString *)primaryKeyPath delegate:(id<UAFilterableResultsControllerDelegate>)delegate
-{
-    if ((self = [self init]))
-    {
-        [self setPrimaryKeyPath:primaryKeyPath];
-        [self setDelegate:delegate];
-        [self setTableViewHasLoaded:NO];
-        [self setChangeBatches:0];
-        [self setUAAppliedFilters:[[NSMutableArray alloc] initWithCapacity:0]];
-        [self setUpdatesEnabled:YES];
+- (id)initWithPrimaryKeyPath:(nullable NSString *)primaryKeyPath delegate:(nullable id<UAFilterableResultsControllerDelegate>)delegate {
+    self = [self init];
+    if (self) {
+        self.primaryKeyPath = primaryKeyPath;
+        self.delegate = delegate;
+        self.tableViewHasLoaded = NO;
+        self.changeBatches = 0;
+        self.UAAppliedFilters = [[NSMutableArray alloc] initWithCapacity:0];
+        self.updatesEnabled = YES;
     }
     return self;
 }
 
-- (id)initWithDelegate:(id<UAFilterableResultsControllerDelegate>)delegate
-{
-    if ((self = [self init]))
-    {
-        [self setDelegate:delegate];
-        [self setTableViewHasLoaded:NO];
-        [self setChangeBatches:0];
-        [self setUAAppliedFilters:[[NSMutableArray alloc] initWithCapacity:0]];
-        [self setUpdatesEnabled:YES];
+- (id)initWithDelegate:(id<UAFilterableResultsControllerDelegate>)delegate {
+    self = [self init];
+    if (self) {
+        self.delegate = delegate;
+        self.tableViewHasLoaded = NO;
+        self.changeBatches = 0;
+        self.UAAppliedFilters = [[NSMutableArray alloc] initWithCapacity:0];
+        self.updatesEnabled = YES;
     }
     return self;
 }
 
 #pragma mark - Object Manipulation
 
-- (void)setData:(NSArray *)data
-{
-    BOOL hasExistingData = self.UAData != nil;
-    BOOL isFiltered = [self isFiltered];
+- (void)setData:(nullable NSArray *)data {
+    BOOL hasExistingData = (self.UAData != nil);
+    BOOL isFiltered = self.isFiltered;
     
     // nil'ing out the data?
-    if (data == nil)
-    {
-        [self setUAData:nil];
-        [self setFilteredData:nil notifications:NO];
+    if (data == nil) {
+        self.UAData = nil;
+        [self setFilteredData:nil
+                notifications:NO];
 
         // notify if there used to be data to delete all of the data
-        if (hasExistingData)
-        {
+        if (hasExistingData) {
             [self notifyReload];
-            [self setTableViewHasLoaded:NO];
+            self.tableViewHasLoaded = NO;
         }
         return;
     }
     
     // if its 2D, make it mutable on both levels
-    if ([self isArrayTwoDimensional:data])
-    {
-        NSMutableArray *replacementData = [[NSMutableArray alloc] initWithCapacity:[data count]];
-        for (NSArray *section in data)
+    if ([self isArrayTwoDimensional:data]) {
+        NSMutableArray *replacementData = [[NSMutableArray alloc] initWithCapacity:data.count];
+        for (NSArray *section in data) {
             [replacementData addObject:[[NSMutableArray alloc] initWithArray:section]];
-
-        if (hasExistingData)
-        {
+        }
+        if (hasExistingData) {
             [self notifyBeginChanges];
 
-            if (!isFiltered)
+            if (!isFiltered) {
                 [self notifyForChangesFrom:self.UAData to:replacementData];
-
-            [self setUAData:replacementData];
+            }
+            self.UAData = replacementData;
             [self notifyEndChanges];
-        } else
-        {
-            [self setUAData:replacementData];
+        } else {
+            self.UAData = replacementData;
             [self reapplyFiltersWithoutNotifying];
             [self notifyReload];
         }
@@ -126,44 +87,43 @@
         replacementData = nil;
 
     // straight array
-    } else
-    {
-        if (hasExistingData)
-        {
+    } else {
+        if (hasExistingData) {
             [self notifyBeginChanges];
 
             NSMutableArray *existingData = self.UAData;
-            [self setUAData:[data mutableCopy]];
+            self.UAData = data.mutableCopy;
 
-            if (!isFiltered)
-                [self notifyForChangesFrom:existingData to:self.UAData];
-
+            if (!isFiltered) {
+                [self notifyForChangesFrom:existingData
+                                        to:self.UAData];
+            }
             [self notifyEndChanges];
-        } else
-        {
-            [self setUAData:[data mutableCopy]];
+        } else {
+            self.UAData = data.mutableCopy;
             [self reapplyFiltersWithoutNotifying];
             [self notifyReload];
         }
     }
 }
 
-- (void)setData:(NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator
-{
-    if (comparator == NULL)
+- (void)setData:(nullable NSArray *)arrayOfObjects
+ sortComparator:(NSComparator)comparator {
+    if (comparator == NULL) {
         [self setData:arrayOfObjects];
-    else
+    }
+    else {
         [self setData:[arrayOfObjects sortedArrayUsingComparator:comparator]];
+    }
 }
 
-- (void)setData:(NSArray *)arrayOfObjects sortKeyPath:(NSString *)sortKeyPath sortOptions:(NSStringCompareOptions)options
-{
+- (void)setData:(NSArray *)arrayOfObjects
+    sortKeyPath:(NSString *)sortKeyPath
+    sortOptions:(NSStringCompareOptions)options {
     __block NSArray *keyPaths = [sortKeyPath componentsSeparatedByString:@","];
 
-    [self setData:arrayOfObjects sortComparator:^NSComparisonResult(id obj1, id obj2)
-    {
-        for (NSString *path in keyPaths)
-        {
+    [self setData:arrayOfObjects sortComparator:^NSComparisonResult(id obj1, id obj2) {
+        for (NSString *path in keyPaths) {
             id value1 = [obj1 valueForKeyPath:path];
             id value2 = [obj2 valueForKeyPath:path];
             
@@ -176,38 +136,32 @@
     }];
 }
 
-- (NSArray *)data
-{
+- (NSArray *)data {
     return self.UAData;
 }
 
-- (void)setFilteredData:(NSMutableArray *)filteredData
-{
-    [self setFilteredData:filteredData notifications:YES];
+- (void)setFilteredData:(NSMutableArray *)filteredData {
+    [self setFilteredData:filteredData
+            notifications:YES];
 }
 
-- (void)setFilteredData:(NSMutableArray *)filteredData notifications:(BOOL)notifications
-{
-    if (!notifications)
-    {
+- (void)setFilteredData:(nullable NSMutableArray *)filteredData notifications:(BOOL)shouldNotify {
+    if (!shouldNotify) {
         _filteredData = filteredData;
         return;
     }
 
     // adding or changing a filter
-    if (filteredData != nil)
-    {
+    if (filteredData != nil) {
         // changing from unfiltered data to filtered data
-        if (_filteredData == nil)
-        {
+        if (_filteredData == nil) {
             [self notifyBeginChanges];
             [self notifyForChangesFrom:self.UAData to:filteredData];
             _filteredData = filteredData;
             [self notifyEndChangesButDontReapplyFilters];
 
         // changing from filtered to filtered
-        } else
-        {
+        } else {
             [self notifyBeginChanges];
             NSMutableArray *oldFiltered = _filteredData;
             _filteredData = filteredData;
@@ -216,8 +170,7 @@
         }
 
     // removing a filter
-    } else if (_filteredData != nil)
-    {
+    } else if (_filteredData != nil) {
         [self notifyBeginChanges];
         [self notifyForChangesFrom:_filteredData to:self.UAData];
         _filteredData = nil;
@@ -227,66 +180,76 @@
     // the fourth is nil to nil, do nothing!
 }
 
-- (BOOL)isFiltered
-{
-    return self.appliedFilters != nil && [self.appliedFilters count] > 0 && self.filteredData != nil;
+- (BOOL)isFiltered {
+    return ((self.appliedFilters != nil) &&
+            (self.appliedFilters.count > 0) &&
+            (self.filteredData != nil));
 }
 
-- (NSArray *)allObjects
-{
-    if ([self isArrayTwoDimensional:self.UAData])
-        return [self.UAData UAFlattenedArray];
-    return self.UAData;
+- (NSArray *)allObjects {
+    NSArray * retObjects = nil;
+    if ([self isArrayTwoDimensional:self.UAData]) {
+        retObjects = [self.UAData UAFlattenedArray];
+    } else {
+        retObjects = self.UAData;
+    }
+    return retObjects;
 }
 
-- (void)addObject:(id)object
-{
+- (void)addObject:(id)object {
     NSAssert(self.UAData != nil, @"Cannot add object to nil data.");
     NSParameterAssert(object != nil);
     
     [self addObject:object inSection:-1];
 }
 
-- (void)addObject:(id)object inSection:(NSInteger)sectionIndex
-{
+- (void)addObject:(id)object inSection:(NSInteger)sectionIndex {
     NSAssert(self.UAData != nil, @"Cannot add object to nil data.");
     NSParameterAssert(object != nil);
     
     [self notifyBeginChanges];
     
     // add it to the bottom of the last section if we're 2D
-    if ([self isArrayTwoDimensional:self.UAData])
-    {
+    if ([self isArrayTwoDimensional:self.UAData]) {
         NSMutableArray *section = sectionIndex == -1 ? [self.UAData lastObject] : [self.UAData objectAtIndex:(NSUInteger)sectionIndex];
         [section addObject:object];
 
-        if (![self isFiltered])
-            [self notifyChangedObject:object atIndexPath:nil
+        if (![self isFiltered]) {
+            NSInteger row = ((NSInteger)section.count-1);
+            NSInteger section = (sectionIndex == -1 ? self.UAData.count-1 : sectionIndex);
+            
+            NSIndexPath * newIndexP = [NSIndexPath indexPathForRow:row
+                                                         inSection:section];
+            [self notifyChangedObject:object
+                          atIndexPath:nil
                         forChangeType:UAFilterableResultsChangeInsert
-                         newIndexPath:[NSIndexPath indexPathForRow:((NSInteger)[section count]-1) inSection:(sectionIndex == -1 ? [self.UAData count]-1 : sectionIndex)]];
+                         newIndexPath:newIndexP];
+        }
         
-    } else
-    {
+    } else {
         [self.UAData addObject:object];
         
-        if (![self isFiltered])
+        if (![self isFiltered]) {
+            NSIndexPath * newIndexP = [NSIndexPath indexPathForRow:((NSInteger)self.UAData.count-1)
+                                                         inSection:0];
             [self notifyChangedObject:object atIndexPath:nil
                         forChangeType:UAFilterableResultsChangeInsert
-                         newIndexPath:[NSIndexPath indexPathForRow:((NSInteger)[self.UAData count]-1) inSection:0]];
+                         newIndexPath:newIndexP];
+        }
     }
     
     
     [self notifyEndChanges];
 }
 
-- (void)removeObject:(id)object
-{
+- (void)removeObject:(id)object {
     NSAssert(self.UAData != nil, @"Cannot remove object from nil data.");
     NSParameterAssert(object != nil);
 
     NSIndexPath *indexPath = [self indexPathOfObject:object];
-    if (indexPath != nil)
+    if (indexPath != nil) {
         [self removeObjectAtIndexPath:indexPath];
+    }
 }
 
 - (void)removeObjectAtIndexPath:(NSIndexPath *)indexPath
@@ -302,11 +265,12 @@
     [section removeObjectAtIndex:(NSUInteger)indexPath.row];
     
     // notify
-    if (![self isFiltered])
+    if (![self isFiltered]) {
         [self notifyChangedObject:oldObject
                       atIndexPath:indexPath
                     forChangeType:UAFilterableResultsChangeDelete
                      newIndexPath:nil];
+    }
 
     [self notifyEndChanges];
 }
@@ -318,35 +282,35 @@
     
     // find the object
     NSIndexPath *indexPath = [self indexPathOfObjectWithPrimaryKey:primaryKey inArray:self.UAData];
-    if (indexPath != nil)
+    if (indexPath != nil) {
         [self removeObjectAtIndexPath:indexPath];
+    }
 }
 
-- (void)replaceObject:(id)anObject
-{
+- (void)replaceObject:(id)anObject {
     NSAssert(self.UAData != nil, @"Cannot replace object in nil data.");
     NSParameterAssert(anObject != nil);
     
     // find the object
     NSIndexPath *indexPath = [self indexPathOfObject:anObject];
-    if (indexPath != nil)
+    if (indexPath != nil) {
         [self replaceObjectAtIndexPath:indexPath withObject:anObject];
+    }
 }
 
-- (void)replaceObject:(id)oldObject withObject:(id)newObject
-{
+- (void)replaceObject:(id)oldObject withObject:(id)newObject {
     NSAssert(self.UAData != nil, @"Cannot replace object in nil data.");
     NSParameterAssert(oldObject != nil);
     NSParameterAssert(newObject != nil);
 
     // find the object
     NSIndexPath *indexPath = [self indexPathOfObject:oldObject];
-    if (indexPath != nil)
+    if (indexPath != nil) {
         [self replaceObjectAtIndexPath:indexPath withObject:newObject];
+    }
 }
 
-- (void)replaceObjectAtIndexPath:(NSIndexPath *)indexPath withObject:(id)newObject
-{
+- (void)replaceObjectAtIndexPath:(NSIndexPath *)indexPath withObject:(id)newObject {
     NSAssert(self.UAData != nil, @"Cannot replace object in nil data.");
     NSParameterAssert(indexPath != nil);
     NSParameterAssert(newObject != nil);
@@ -355,111 +319,111 @@
 
     // 2D Arrays
     NSMutableArray *data = self.UAData;
-    if ([self isArrayTwoDimensional:data])
-    {
+    if ([self isArrayTwoDimensional:data]) {
         NSMutableArray *section = [data objectAtIndex:(NSUInteger)indexPath.section];
         [section replaceObjectAtIndex:(NSUInteger)indexPath.row withObject:newObject];
         
-        if (![self isFiltered])
+        if (![self isFiltered]) {
             [self notifyChangedObject:newObject
                           atIndexPath:indexPath
                         forChangeType:UAFilterableResultsChangeUpdate
                          newIndexPath:indexPath];
+        }
 
-    } else
-    {
+    } else {
         [data replaceObjectAtIndex:(NSUInteger)indexPath.row withObject:newObject];
 
-        if (![self isFiltered])
+        if (![self isFiltered]) {
             [self notifyChangedObject:newObject
                           atIndexPath:[NSIndexPath indexPathForRow:indexPath.row inSection:0]
                         forChangeType:UAFilterableResultsChangeUpdate
                          newIndexPath:[NSIndexPath indexPathForRow:indexPath.row inSection:0]];
+        }
     }
     
     [self notifyEndChanges];
 }
 
-- (void)replaceObjects:(NSArray *)arrayOfObjects
-{
+- (void)replaceObjects:(NSArray *)arrayOfObjects {
     NSParameterAssert(arrayOfObjects != nil);
 
     [self notifyBeginChanges];
-    for (id object in arrayOfObjects)
+    for (id object in arrayOfObjects) {
         [self replaceObject:object];
+    }
     [self notifyEndChanges];
 }
 
-- (void)mergeObjects:(NSArray *)arrayOfObjects
-{
+- (void)mergeObjects:(NSArray *)arrayOfObjects {
     [self mergeObjects:arrayOfObjects sortComparator:nil];
 }
 
-- (void)mergeObjects:(NSArray *)arrayOfObjects sortComparator:(NSComparator)comparator
-{
-    // not sorting
-    if (comparator == nil)
-    {
+- (void)mergeObjects:(NSArray *)arrayOfObjects sortComparator:(nullable NSComparator)comparator {
+    
+    if (comparator == nil) { // not sorting
 
         // if the existing data is nil just set it
-        if (self.UAData == nil)
+        if (self.UAData == nil) {
             [self setData:arrayOfObjects];
-        
-        else
-        {
+        } else {
+            
             [self notifyBeginChanges];
 
-            for (id object in arrayOfObjects)
-            {
-                if ([self indexPathOfObject:object] != nil)
+            for (id object in arrayOfObjects) {
+                
+                if ([self indexPathOfObject:object] != nil) {
                     [self replaceObject:object];
-                else
+                }
+                else {
                     [self addObject:object];
+                }
             }
             [self notifyEndChanges];
         }
 
 
-    // more complex if sorting (setData: will handle the notifications)
-    } else
-    {
+    
+    } else { // more complex if sorting (setData: will handle the notifications)
+        
         NSMutableArray *data = self.UAData ? [self.UAData mutableCopy] : [NSMutableArray array];
-        for (id object in arrayOfObjects)
-        {
+        for (id object in arrayOfObjects) {
             NSIndexPath *indexPath = [self indexPathOfObject:object inArray:data];
-            if (indexPath != nil)
+            if (indexPath != nil) {
                 [data replaceObjectAtIndex:(NSUInteger)indexPath.row withObject:object];
-            else
+            }
+            else {
                 [data addObject:object];
+            }
         }
         [self setData:[data sortedArrayUsingComparator:comparator]];
     }
 }
 
-- (void)mergeObjects:(NSArray *)arrayOfObjects sortKeyPath:(NSString *)sortKeyPath sortOptions:(NSStringCompareOptions)options
-{
+- (void)mergeObjects:(NSArray *)arrayOfObjects
+         sortKeyPath:(NSString *)sortKeyPath
+         sortOptions:(NSStringCompareOptions)options {
+    
     __block NSArray *keyPaths = [sortKeyPath componentsSeparatedByString:@","];
 
-    [self mergeObjects:arrayOfObjects sortComparator:^NSComparisonResult(id obj1, id obj2)
-    {
-        for (NSString *path in keyPaths)
-        {
+    [self mergeObjects:arrayOfObjects sortComparator:^NSComparisonResult(id obj1, id obj2) {
+        for (NSString *path in keyPaths) {
             id value1 = [obj1 valueForKeyPath:path];
             id value2 = [obj2 valueForKeyPath:path];
             
             NSComparisonResult result = [value1 compare:value2 options:options];
-            if (result != NSOrderedSame)
+            if (result != NSOrderedSame) {
                 return result;
+            }
         }
         
         return NSOrderedSame;
     }];
 }
 
-- (id)objectAtIndexPath:(NSIndexPath *)indexPath
-{
-    if (self.UAData == nil)
+- (nullable id)objectAtIndexPath:(NSIndexPath *)indexPath {
+    if (self.UAData == nil) {
         return nil;
+    }
 
     NSParameterAssert(indexPath != nil);
 
@@ -467,22 +431,23 @@
     NSArray *data = self.UAData;
     if ([self isArrayTwoDimensional:data])
     {
-        NSArray *section = [data objectAtIndex:(NSUInteger)indexPath.section];
+        NSArray *section = data[indexPath.section];
         
-        if ((NSUInteger)indexPath.row >= [section count])
+        if ((NSUInteger)indexPath.row >= section.count) {
             return nil;
+        }
         
-        return [section objectAtIndex:(NSUInteger)indexPath.row];
+        return section[indexPath.row];
 
     // Plain array
-    } else if ((NSUInteger)indexPath.row < [data count])
-        return [data objectAtIndex:(NSUInteger)indexPath.row];
+    } else if ((NSUInteger)indexPath.row < data.count) {
+        return data[indexPath.row];
+    }
     
     return nil;
 }
 
-- (id)filteredObjectAtIndexPath:(NSIndexPath *)indexPath
-{
+- (nullable id)filteredObjectAtIndexPath:(NSIndexPath *)indexPath {
     if (self.filteredData == nil)
         return [self objectAtIndexPath:indexPath];
 
@@ -492,22 +457,24 @@
     NSArray *data = self.filteredData;
     if ([self isArrayTwoDimensional:data])
     {
-        if (indexPath.section >= [data count])
+        if (indexPath.section >= data.count) {
             return nil;
-        NSArray *section = [data objectAtIndex:(NSUInteger)indexPath.section];
+        }
+        NSArray *section = data[indexPath.section];
         
-        if (indexPath.row >= [section count])
+        if (indexPath.row >= section.count) {
             return nil;
+        }
 
-        return [section objectAtIndex:(NSUInteger)indexPath.row];
+        return section[indexPath.row];
         
     // Plain array
-    } else
-        return [data objectAtIndex:(NSUInteger)indexPath.row];
+    } else {
+        return data[indexPath.row];
+    }
 }
 
-- (id)objectWithPrimaryKey:(id)primaryKey
-{
+- (nullable id)objectWithPrimaryKey:(id)primaryKey {
     NSAssert(self.UAData != nil, @"Cannot find object in nil data.");
     NSAssert(self.primaryKeyPath != nil, @"Cannot find object using nil primary key path.");
     NSParameterAssert(primaryKey != nil);
@@ -516,27 +483,28 @@
     NSArray *data = self.UAData;
     if ([self isArrayTwoDimensional:data])
     {
-        for (NSUInteger sectionCounter = 0; sectionCounter < [data count]; sectionCounter++)
-        {
-            NSArray *section = [data objectAtIndex:sectionCounter];
-            for (NSUInteger rowCounter = 0; rowCounter < [section count]; rowCounter++)
-            {
-                id obj = [section objectAtIndex:rowCounter];
+        for (NSUInteger sectionCounter = 0; sectionCounter < data.count; sectionCounter++) {
+            NSArray *section = data[sectionCounter];
+            for (NSUInteger rowCounter = 0; rowCounter < section.count; rowCounter++) {
+                
+                id obj = section[rowCounter];
                 id value = [obj valueForKeyPath:self.primaryKeyPath];
-                if (value != nil && [primaryKey isEqual:value])
+                
+                if (value != nil && [primaryKey isEqual:value]) {
                     return obj;
+                }
             }
         }
         
         // Plain array
-    } else
-    {
-        for (NSUInteger rowCounter = 0; rowCounter < [data count]; rowCounter++)
-        {
-            id obj = [data objectAtIndex:rowCounter];
+    } else {
+        
+        for (NSUInteger rowCounter = 0; rowCounter < data.count; rowCounter++) {
+            id obj = data[rowCounter];
             id value = [obj valueForKeyPath:self.primaryKeyPath];
-            if (value != nil && [primaryKey isEqual:value])
+            if (value != nil && [primaryKey isEqual:value]) {
                 return obj;
+            }
         }
     }
     
@@ -544,51 +512,47 @@
     return nil;
 }
 
-- (NSIndexPath *)indexPathOfObject:(id)object
-{
+- (nullable NSIndexPath *)indexPathOfObject:(id)object {
     return [self indexPathOfObject:object inArray:self.UAData];
 }
 
-- (NSIndexPath *)filteredIndexPathOfObject:(id)object
-{
+- (nullable NSIndexPath *)filteredIndexPathOfObject:(id)object {
     return [self indexPathOfObject:object inArray:(self.filteredData ?: self.UAData)];
 }
 
-- (NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data
-{
+- (nullable NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data {
     return [self indexPathOfObject:object inArray:data usingKeyPath:self.primaryKeyPath];
 }
 
-- (NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data usingKeyPath:(NSString *)keyPath
-{
-    if (data == nil)
+- (nullable NSIndexPath *)indexPathOfObject:(id)object inArray:(NSArray *)data usingKeyPath:(nullable NSString *)keyPath {
+    if (data == nil) {
         data = self.UAData;
+    }
 
     NSAssert(data != nil, @"Cannot find index path of object in nil data.");
     NSParameterAssert(object != nil);
 
     // 2D Arrays
-    if ([self isArrayTwoDimensional:data])
-    {
-        for (NSUInteger sectionCounter = 0; sectionCounter < [data count]; sectionCounter++)
-        {
-            NSArray *section = [data objectAtIndex:sectionCounter];
-            for (NSUInteger rowCounter = 0; rowCounter < [section count]; rowCounter++)
+    if ([self isArrayTwoDimensional:data]) {
+        for (NSUInteger sectionCounter = 0; sectionCounter < data.count; sectionCounter++) {
+            
+            NSArray *section = data[sectionCounter];
+            for (NSUInteger rowCounter = 0; rowCounter < section.count; rowCounter++)
             {
-                id obj = [section objectAtIndex:rowCounter];
-                if ([self isObject:obj equalToObject:object usingKeyPath:keyPath])
+                id obj = section[rowCounter];
+                if ([self isObject:obj equalToObject:object usingKeyPath:keyPath]) {
                     return [NSIndexPath indexPathForRow:(NSInteger)rowCounter inSection:(NSInteger)sectionCounter];
+                }
             }
         }
 
     // Plain array
-    } else
-    {
-        for (NSUInteger rowCounter = 0; rowCounter < [data count]; rowCounter++)
-        {
-            id obj = [data objectAtIndex:rowCounter];
-            if ([self isObject:obj equalToObject:object usingKeyPath:keyPath])
+    } else {
+        for (NSUInteger rowCounter = 0; rowCounter < data.count; rowCounter++) {
+            id obj = data[rowCounter];
+            if ([self isObject:obj equalToObject:object usingKeyPath:keyPath]) {
                 return [NSIndexPath indexPathForRow:(NSInteger)rowCounter inSection:0];
+            }
         }
     }
     
@@ -596,74 +560,68 @@
     return nil;
 }
 
-- (NSUInteger)indexOfObject:(id)object inArray:(NSArray *)data usingKeyPath:(NSString *)keyPath
-{
-    for (NSUInteger rowCounter = 0; rowCounter < [data count]; rowCounter++)
-    {
-        id obj = [data objectAtIndex:rowCounter];
-        if ([self isObject:obj equalToObject:object usingKeyPath:keyPath])
+- (NSUInteger)indexOfObject:(id)object inArray:(NSArray *)data usingKeyPath:(nullable NSString *)keyPath {
+    for (NSUInteger rowCounter = 0; rowCounter < data.count; rowCounter++) {
+        id obj = data[rowCounter];
+        if ([self isObject:obj equalToObject:object usingKeyPath:keyPath]) {
             return rowCounter;
+        }
     }
     return NSNotFound;
 }
 
-- (NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key
-{
+- (nullable NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key {
     return [self indexPathOfObjectWithPrimaryKey:key inArray:self.UAData];
 }
 
-- (NSIndexPath *)filteredIndexPathOfObjectWithPrimaryKey:(id)key
-{
+- (nullable NSIndexPath *)filteredIndexPathOfObjectWithPrimaryKey:(id)key {
     return [self indexPathOfObjectWithPrimaryKey:key inArray:(self.filteredData ?: self.UAData)];
 }
 
-- (NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key inArray:(NSArray *)data
-{
-    if (self.primaryKeyPath == nil)
+- (nullable NSIndexPath *)indexPathOfObjectWithPrimaryKey:(id)key inArray:(NSArray *)data {
+    if (self.primaryKeyPath == nil) {
         return nil;
+    }
     NSString *keyPath = self.primaryKeyPath;
 
-    if (data == nil)
+    if (data == nil) {
         data = self.UAData;
+    }
 
-    if (data == nil)
+    if (data == nil) {
         return nil;
+    }
     
     NSAssert(self.primaryKeyPath != nil, @"Cannot find object using nil primary key path.");
     NSParameterAssert(key != nil);
     
-    @try
-    {
+    @try {
     
         // 2D Arrays
-        if ([self isArrayTwoDimensional:data])
-        {
-            for (NSUInteger sectionCounter = 0; sectionCounter < [data count]; sectionCounter++)
-            {
-                NSArray *section = [data objectAtIndex:sectionCounter];
-                for (NSUInteger rowCounter = 0; rowCounter < [section count]; rowCounter++)
-                {
-                    id obj = [section objectAtIndex:rowCounter];
+        if ([self isArrayTwoDimensional:data]) {
+            for (NSUInteger sectionCounter = 0; sectionCounter < data.count; sectionCounter++) {
+                NSArray *section = data[sectionCounter];
+                for (NSUInteger rowCounter = 0; rowCounter < section.count; rowCounter++) {
+                    id obj = section[rowCounter];
                     id aValue = [obj valueForKeyPath:keyPath];
-                    if ([aValue isEqual:key])
+                    if ([aValue isEqual:key]) {
                         return [NSIndexPath indexPathForRow:(NSInteger)rowCounter inSection:(NSInteger)sectionCounter];
+                    }
                 }
             }
             
             // Plain array
-        } else
-        {
-            for (NSUInteger rowCounter = 0; rowCounter < [data count]; rowCounter++)
-            {
-                id obj = [data objectAtIndex:rowCounter];
+        } else {
+            for (NSUInteger rowCounter = 0; rowCounter < data.count; rowCounter++) {
+                id obj = data[rowCounter];
                 id aValue = [obj valueForKeyPath:keyPath];
-                if ([aValue isEqual:key])
+                if ([aValue isEqual:key]) {
                     return [NSIndexPath indexPathForRow:(NSInteger)rowCounter inSection:0];
+                }
             }
         }
 
-    } @catch (NSException *exception)
-    {
+    } @catch (NSException *exception) {
         return nil;
     }
     
@@ -671,88 +629,86 @@
     return nil;
 }
 
-- (NSUInteger)numberOfObjects
-{
+- (NSUInteger)numberOfObjects {
     NSArray *data = self.UAData;
-    if (data == nil || [data count] == 0)
+    if (data == nil || data.count == 0) {
         return 0;
+    }
 
     // not 2D?
-    if (![self isArrayTwoDimensional:data])
-        return [data count];
+    if (![self isArrayTwoDimensional:data]) {
+        return data.count;
+    }
 
     // definitely 2D. Add them up.
     NSUInteger count = 0;
-    for (NSArray *section in data)
-        count += [section count];
+    for (NSArray *section in data) {
+        count += section.count;
+    }
     
     return count;
 }
 
 #pragma mark - Object Comparison
 
-- (BOOL)isObject:(id)anObject equalToObject:(id)anotherObject usingKeyPath:(NSString *)keyPath
-{
+- (BOOL)isObject:(id)anObject equalToObject:(id)anotherObject usingKeyPath:(NSString *)keyPath {
     // hack for ids and hashes
-    if ([anObject isEqual:anotherObject])
+    if ([anObject isEqual:anotherObject]) {
         return YES;
+    }
 
     // are they the same class?
-    if (![anObject isKindOfClass:[anotherObject class]])
+    if (![anObject isKindOfClass:[anotherObject class]]) {
         return NO;
+    }
 
     // no key path supplied? Can't continue further checking.
-    if (keyPath == nil)
-    {
+    if (keyPath == nil) {
         // check directly (we already know they're the same class)
-        if ([anObject isKindOfClass:[NSString class]])
+        if ([anObject isKindOfClass:[NSString class]]) {
             return [((NSString *)anObject) isEqualToString:anotherObject];
-        
+        }
         return NO;
     }
     
     // otherwise, get the values at the specified keypath for both and compare those
-    @try
-    {
+    @try {
         id aValue = [anObject valueForKeyPath:keyPath];
         id anotherValue = [anotherObject valueForKeyPath:keyPath];
-        if ([aValue isEqual:anotherValue])
+        if ([aValue isEqual:anotherValue]) {
             return YES;
+        }
         
         // otherwise no
         return NO;
-    }
-    @catch (NSException *)
-    {
+    } @catch (NSException *) {
         // the keypath wasnt found on at least one of the objects, so definitely not.
         return NO;
     }
 }
 
-- (BOOL)isArrayTwoDimensional:(NSArray *)array
-{
-    if (array == nil || [array count] == 0)
+- (BOOL)isArrayTwoDimensional:(NSArray *)array {
+    if (array == nil || array.count == 0) {
         return NO;
+    }
     
     return [[array firstObject] isKindOfClass:[NSArray class]];
 }
 
 #pragma mark - Section Manipulation
 
-- (void)addSection:(NSArray *)section
-{
+- (void)addSection:(NSArray *)section {
     NSAssert(self.UAData != nil, @"Cannot add section to nil data.");
     NSAssert([self isArrayTwoDimensional:self.UAData], @"Cannot add section to 1D array.");
     NSParameterAssert(section != nil);
     
     [self notifyBeginChanges];
-    [self.UAData addObject:[[NSMutableArray alloc] initWithArray:section]];
-    [self notifyChangedSectionAtIndex:((NSInteger)[self.UAData count]-1) forChangeType:UAFilterableResultsChangeInsert];
+    [self.UAData addObject:[section mutableCopy]];
+    [self notifyChangedSectionAtIndex:((NSInteger)self.UAData.count-1) forChangeType:UAFilterableResultsChangeInsert];
     [self notifyEndChanges];
 }
 
-- (void)insertSection:(NSArray *)section atIndex:(NSUInteger)index
-{
+- (void)insertSection:(NSArray *)section atIndex:(NSUInteger)index {
     NSAssert(self.UAData != nil, @"Cannot insert section to nil data.");
     NSAssert([self isArrayTwoDimensional:self.UAData], @"Cannot imsert section to 1D array.");
     NSParameterAssert(section != nil);
@@ -763,8 +719,7 @@
     [self notifyEndChanges];
 }
 
-- (void)removeSection:(NSArray *)section
-{
+- (void)removeSection:(NSArray *)section {
     NSAssert(self.UAData != nil, @"Cannot remove section from nil data.");
     NSAssert([self isArrayTwoDimensional:self.UAData], @"Cannot remove section from 1D array.");
     NSParameterAssert(section != nil);
@@ -773,8 +728,7 @@
     [self removeSectionAtIndex:indexOfSection];
 }
 
-- (void)removeSectionAtIndex:(NSUInteger)sectionIndex
-{
+- (void)removeSectionAtIndex:(NSUInteger)sectionIndex {
     NSAssert(self.UAData != nil, @"Cannot remove section from nil data.");
     NSAssert([self isArrayTwoDimensional:self.UAData], @"Cannot remove section from 1D array.");
 
@@ -787,20 +741,19 @@
     }
 }
 
-- (void)replaceSection:(NSArray *)oldSection withSection:(NSArray *)newSection
-{
+- (void)replaceSection:(NSArray *)oldSection withSection:(NSArray *)newSection {
     NSAssert(self.UAData != nil, @"Cannot replace section in nil data.");
     NSAssert([self isArrayTwoDimensional:self.UAData], @"Cannot replace section in 1D array.");
     NSParameterAssert(oldSection != nil);
     NSParameterAssert(newSection != nil);
     
     NSUInteger indexOfSection = [self.UAData indexOfObject:oldSection];
-    if (indexOfSection != NSNotFound)
+    if (indexOfSection != NSNotFound) {
         [self replaceSectionAtIndex:(NSInteger)indexOfSection withSection:newSection];
+    }
 }
 
-- (void)replaceSectionAtIndex:(NSInteger)sectionIndex withSection:(NSArray *)newSection
-{
+- (void)replaceSectionAtIndex:(NSInteger)sectionIndex withSection:(NSArray *)newSection {
     NSAssert(self.UAData != nil, @"Cannot replace section in nil data.");
     NSAssert([self isArrayTwoDimensional:self.UAData], @"Cannot replace section in 1D array.");
     NSParameterAssert(sectionIndex != NSNotFound);
@@ -811,10 +764,11 @@
     NSArray *existing = [self.UAData objectAtIndex:(NSUInteger)sectionIndex];
     [self.UAData replaceObjectAtIndex:(NSUInteger)sectionIndex withObject:newSection];
 
-    if (existing != nil)
+    if (existing != nil) {
         [self notifyForChangesForSectionAtIndex:sectionIndex from:existing to:newSection];
-    else
+    } else {
         [self notifyChangedSectionAtIndex:sectionIndex forChangeType:UAFilterableResultsChangeUpdate];
+    }
 
     [self notifyEndChanges];
 }
@@ -822,17 +776,14 @@
 
 #pragma mark - Filters
 
-- (void)addFilter:(UAFilter *)filter
-{
+- (void)addFilter:(UAFilter *)filter {
     NSMutableArray *appliedFilters = self.UAAppliedFilters;
 
     // are there any existing filters in this group?
     BOOL didReplaceFilter = NO;
-    for (NSUInteger i = 0; i < [appliedFilters count]; i++)
-    {
+    for (NSUInteger i = 0; i < appliedFilters.count; i++) {
         UAFilter *existingFilter = [appliedFilters objectAtIndex:i];
-        if (existingFilter.groupTitle != nil && filter.groupTitle != nil && [existingFilter.groupTitle isEqualToString:filter.groupTitle])
-        {
+        if (existingFilter.groupTitle != nil && filter.groupTitle != nil && [existingFilter.groupTitle isEqualToString:filter.groupTitle]) {
             [appliedFilters replaceObjectAtIndex:i withObject:filter];
             didReplaceFilter = YES;
             break;
@@ -840,26 +791,23 @@
     }
     
     // if we did not replace an existing filter we add it in
-    if (!didReplaceFilter)
+    if (!didReplaceFilter) {
         [appliedFilters addObject:filter];
+    }
     
     // reload the filters
     [self applyFilters:appliedFilters];
 }
 
-- (void)addFilters:(NSArray *)filters
-{
+- (void)addFilters:(NSArray *)filters {
     NSMutableArray *appliedFilters = self.UAAppliedFilters;
     
-    for (UAFilter *filter in filters)
-    {
+    for (UAFilter *filter in filters) {
         // are there any existing filters in this group?
         BOOL didReplaceFilter = NO;
-        for (NSUInteger i = 0; i < [appliedFilters count]; i++)
-        {
+        for (NSUInteger i = 0; i < appliedFilters.count; i++) {
             UAFilter *existingFilter = [appliedFilters objectAtIndex:i];
-            if (existingFilter.groupTitle != nil && filter.groupTitle != nil && [existingFilter.groupTitle isEqualToString:filter.groupTitle])
-            {
+            if (existingFilter.groupTitle != nil && filter.groupTitle != nil && [existingFilter.groupTitle isEqualToString:filter.groupTitle]) {
                 [appliedFilters replaceObjectAtIndex:i withObject:filter];
                 didReplaceFilter = YES;
                 break;
@@ -867,79 +815,75 @@
         }
         
         // if we did not replace an existing filter we add it in
-        if (!didReplaceFilter)
+        if (!didReplaceFilter) {
             [appliedFilters addObject:filter];
+        }
     }
     
     // reload the filters
     [self applyFilters:appliedFilters];
 }
 
-- (void)removeFilter:(UAFilter *)filter
-{
+- (void)removeFilter:(UAFilter *)filter {
     NSMutableArray *appliedFilters = self.UAAppliedFilters;
-    if ([appliedFilters count] == 0)
+    if (appliedFilters.count == 0) {
         return;
+    }
+    
     [appliedFilters removeObject:filter];
     [self applyFilters:appliedFilters];
 }
 
-- (void)replaceFilters:(NSArray *)filters
-{
+- (void)replaceFilters:(NSArray *)filters {
     NSMutableArray *appliedFilters = self.UAAppliedFilters;
-    [appliedFilters replaceObjectsInRange:NSMakeRange(0, [self.UAAppliedFilters count]) withObjectsFromArray:filters];
+    [appliedFilters replaceObjectsInRange:NSMakeRange(0, self.UAAppliedFilters.count) withObjectsFromArray:filters];
     [self applyFilters:appliedFilters];
 }
 
-- (void)clearFilters
-{
+- (void)clearFilters {
     [self.UAAppliedFilters removeAllObjects];
     [self applyFilters:nil];
 }
 
-- (void)reapplyFiltersWithoutNotifying
-{
-    if (self.UAAppliedFilters != nil && [self.UAAppliedFilters count] > 0)
+- (void)reapplyFiltersWithoutNotifying {
+    if (self.UAAppliedFilters != nil && self.UAAppliedFilters.count > 0) {
         [self applyFilters:self.UAAppliedFilters notifications:NO];
+    }
 }
 
-- (void)reapplyFilters
-{
-    if (self.UAAppliedFilters != nil && [self.UAAppliedFilters count] > 0)
+- (void)reapplyFilters {
+    if (self.UAAppliedFilters != nil && self.UAAppliedFilters.count > 0) {
         [self applyFilters:self.UAAppliedFilters];
+    }
 }
 
-- (void)applyFilters:(NSArray *)filters
-{
+- (void)applyFilters:(nullable NSArray *)filters {
     [self applyFilters:filters notifications:YES];
 }
 
-- (void)applyFilters:(NSArray *)filters notifications:(BOOL)notifications
-{
-    if (filters == nil)
-    {
+- (void)applyFilters:(NSArray *)filters notifications:(BOOL)notifications {
+    if (filters == nil) {
         [self setFilteredData:nil notifications:notifications];
         return;
     }
     
     // nothing to apply to?
-    if (self.UAData == nil)
+    if (self.UAData == nil) {
         return;
+    }
 
     // 2D Arrays
     NSMutableArray *data = self.UAData;
-    if ([self isArrayTwoDimensional:data])
-    {
-        NSMutableArray *filteredData = [[NSMutableArray alloc] initWithCapacity:[data count]];
-        for (NSMutableArray *section in data)
-        {
+    if ([self isArrayTwoDimensional:data]) {
+        NSMutableArray *filteredData = [[NSMutableArray alloc] initWithCapacity:data.count];
+        for (NSMutableArray *section in data) {
             NSMutableArray *filteredSection = [[NSMutableArray alloc] initWithArray:section];
 
             // apply all of the filters to that section now
-            for (UAFilter *filter in filters)
-            {
-                if (filter.predicate != nil)
+            for (UAFilter *filter in filters) {
+                if (filter.predicate != nil) {
                     [filteredSection filterUsingPredicate:filter.predicate];
+                }
             }
 
             // and add it to the filtered data
@@ -949,68 +893,71 @@
         [self setFilteredData:filteredData notifications:notifications];
 
     // 1D Array
-    } else
-    {
+    } else {
         NSMutableArray *filteredData = [[NSMutableArray alloc] initWithArray:data];
         
         // apply all of the filters to that section now
         for (UAFilter *filter in filters)
         {
-            if (filter.predicate != nil)
+            if (filter.predicate != nil) {
                 [filteredData filterUsingPredicate:filter.predicate];
+            }
         }
         
         [self setFilteredData:filteredData notifications:notifications];
     }
 }
 
-- (NSArray *)appliedFilters
-{
+- (NSArray *)appliedFilters {
     return self.UAAppliedFilters;
 }
 
 #pragma mark - Delegate Notifications
 
-- (void)beginUpdates
-{
+- (void)beginUpdates {
     [self notifyBeginChanges];
 }
 
-- (void)notifyBeginChanges
-{
-    if (![self areUpdatesEnabled])
+- (void)notifyBeginChanges {
+    if (![self areUpdatesEnabled]){
         return;
+    }
 
     // not until we've loaded
-    if (![self tableViewHasLoaded])
+    if (![self tableViewHasLoaded]) {
         return;
+    }
 
     // we only notify for the outer one, not the inner ones
-    if (self.changeBatches == 0)
-    {
+    if (self.changeBatches == 0) {
         // Notify the delegate of the impending change
         id<UAFilterableResultsControllerDelegate> delegate = self.delegate;
-        if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerWillChangeContent:)])
+        if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerWillChangeContent:)]) {
             [delegate filterableResultsControllerWillChangeContent:self];
+        }
         
-        [self setIndexPathNotificationMapping:[NSMutableDictionary dictionary]];
+        self.indexPathNotificationMapping = [NSMutableDictionary dictionary];
     }
-    [self setChangeBatches:(self.changeBatches + 1)];
+    self.changeBatches = (self.changeBatches + 1);
 //    NSLog(@"Change batches: %li", (long)self.changeBatches);
 }
 
-- (void)notifyChangedObject:(id)object atIndexPath:(NSIndexPath *)indexPath forChangeType:(UAFilterableResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath
-{
-    if (![self areUpdatesEnabled])
+- (void)notifyChangedObject:(id)object
+                atIndexPath:(nullable NSIndexPath *)indexPath
+              forChangeType:(UAFilterableResultsChangeType)type
+               newIndexPath:(nullable NSIndexPath *)newIndexPath {
+    
+    if (![self areUpdatesEnabled]) {
         return;
+    }
     
     // not until we've loaded
-    if (![self tableViewHasLoaded])
+    if (![self tableViewHasLoaded]) {
         return;
+    }
     
     id<UAFilterableResultsControllerDelegate> delegate = self.delegate;
-    if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsController:didChangeObject:atIndexPath:forChangeType:newIndexPath:)])
-    {
+    if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsController:didChangeObject:atIndexPath:forChangeType:newIndexPath:)]) {
         [delegate filterableResultsController:self
                               didChangeObject:object
                                   atIndexPath:indexPath
@@ -1019,23 +966,22 @@
     }
 }
 
-- (void)notifyChangedSectionAtIndex:(NSInteger)sectionIndex forChangeType:(UAFilterableResultsChangeType)type
-{
-    if (![self areUpdatesEnabled])
+- (void)notifyChangedSectionAtIndex:(NSInteger)sectionIndex forChangeType:(UAFilterableResultsChangeType)type {
+    
+    if (![self areUpdatesEnabled]) {
         return;
+    }
     
     // not until we've loaded
-    if (![self tableViewHasLoaded])
+    if (![self tableViewHasLoaded]) {
         return;
+    }
     
     // so we changed a section at that index, which means all the rest are pushed down
-    if (type == UAFilterableResultsChangeInsert)
-    {
-        NSInteger sectionCount = (NSInteger)[self.data count] - 1;
-        if (sectionIndex < sectionCount)
-        {
-            for (NSInteger i = sectionIndex; i < sectionCount; i++)
-            {
+    if (type == UAFilterableResultsChangeInsert) {
+        NSInteger sectionCount = (NSInteger)self.data.count - 1;
+        if (sectionIndex < sectionCount) {
+            for (NSInteger i = sectionIndex; i < sectionCount; i++) {
                 NSIndexPath *newIndexPath = [NSIndexPath indexPathForItem:-1 inSection:i+1];
                 NSIndexPath *oldIndexPath = [NSIndexPath indexPathForItem:-1 inSection:i];
                 [self.indexPathNotificationMapping setObject:oldIndexPath forKey:newIndexPath];
@@ -1043,193 +989,226 @@
         }
 
     // likewise, all the sections were bumped up
-    } else if (type == UAFilterableResultsChangeDelete)
-    {
-        NSInteger sectionCount = (NSInteger)[self.data count] + 1;
-        if (sectionIndex+1 < sectionCount)
-        {
-            for (NSInteger i = sectionIndex+1; i < sectionCount; i++)
-            {
+    } else if (type == UAFilterableResultsChangeDelete) {
+        
+        NSInteger sectionCount = (NSInteger)self.data.count + 1;
+        if (sectionIndex+1 < sectionCount) {
+            for (NSInteger i = sectionIndex+1; i < sectionCount; i++) {
+                
                 NSIndexPath *newIndexPath = [NSIndexPath indexPathForItem:-1 inSection:i-1];
                 NSIndexPath *oldIndexPath = [NSIndexPath indexPathForItem:-1 inSection:i];
-                [self.indexPathNotificationMapping setObject:oldIndexPath forKey:newIndexPath];
+                self.indexPathNotificationMapping[newIndexPath] = oldIndexPath;
+                
             }
         }
     }
     
     id<UAFilterableResultsControllerDelegate> delegate = self.delegate;
-    if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsController:didChangeSectionAtIndex:forChangeType:)])
-    {
+    if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsController:didChangeSectionAtIndex:forChangeType:)]) {
         [delegate filterableResultsController:self
                       didChangeSectionAtIndex:sectionIndex
                                 forChangeType:type];
     }
 }
 
-- (void)notifyForChangesForSectionAtIndex:(NSInteger)sectionIndex from:(NSArray *)fromArray to:(NSArray *)toArray
-{
-    if (![self areUpdatesEnabled])
+- (void)notifyForChangesForSectionAtIndex:(NSInteger)sectionIndex from:(NSArray *)fromArray to:(NSArray *)toArray {
+    if (![self areUpdatesEnabled]) {
         return;
+    }
     
     // move everything that exists in both arrays into a mutable array, notify for all the others
     NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:0];
-    for (NSUInteger rowIndex = 0; rowIndex < [fromArray count]; rowIndex++)
-    {
-        id obj = [fromArray objectAtIndex:rowIndex];
+    for (NSUInteger rowIndex = 0; rowIndex < fromArray.count; rowIndex++) {
+        id obj = fromArray[rowIndex];
         
         // if it exists in the target we add it
-        if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:nil] != nil)
+        if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:nil] != nil) {
             [fromMutable addObject:obj];
+        }
         
         // otherwise, we notify about it
-        else
-            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]] forChangeType:UAFilterableResultsChangeDelete newIndexPath:nil];
+        else {
+            NSIndexPath * indexP = [NSIndexPath indexPathForRow:(NSInteger)rowIndex
+                                                      inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]];
+            [self notifyChangedObject:obj
+                          atIndexPath:indexP
+                        forChangeType:UAFilterableResultsChangeDelete
+                         newIndexPath:nil];
+        }
     }
     
     // now that thats over, we need to loop over the target array and note anything that isn't in the same place as last time
-    for (NSUInteger rowIndex = 0; rowIndex < [toArray count]; rowIndex++)
-    {
-        id obj = [toArray objectAtIndex:rowIndex];
+    for (NSUInteger rowIndex = 0; rowIndex < toArray.count; rowIndex++) {
+        id obj = toArray[rowIndex];
         
         // alrighty, does this object exist in the old one?
         NSUInteger indexInExisting = [self indexOfObject:obj inArray:fromArray usingKeyPath:nil];
-        if (indexInExisting == NSNotFound)
-        {
+        if (indexInExisting == NSNotFound) {
             // nope, lets notify about it
-            [self notifyChangedObject:obj atIndexPath:nil forChangeType:UAFilterableResultsChangeInsert newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]]];
+            NSIndexPath *newIP = [NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]];
+            [self notifyChangedObject:obj
+                          atIndexPath:nil
+                        forChangeType:UAFilterableResultsChangeInsert
+                         newIndexPath:newIP];
             
         // is it the same as where we are now?
-        } else if (indexInExisting == (NSInteger)rowIndex)
-            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
+        } else if (indexInExisting == (NSInteger)rowIndex) {
+            
+            NSIndexPath * ip = [NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]];
+            [self notifyChangedObject:obj
+                          atIndexPath:ip
+                        forChangeType:UAFilterableResultsChangeUpdate
+                         newIndexPath:nil];
+        }
         
         // nope, tell them where it is now
-        else
-            [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)indexInExisting inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]] forChangeType:UAFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+        else {
+            NSIndexPath * ipInExisting = [NSIndexPath indexPathForRow:(NSInteger)indexInExisting inSection:[self originalSectionIndexForIndex:(NSInteger)sectionIndex]];
+            NSIndexPath * newIP = [NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex];
+            [self notifyChangedObject:obj
+                          atIndexPath:ipInExisting
+                        forChangeType:UAFilterableResultsChangeMove
+                         newIndexPath:newIP];
+        }
     }
 }
 
-- (NSInteger)originalSectionIndexForIndex:(NSInteger)sectionIndex
-{
-    if (self.indexPathNotificationMapping == nil || [self.indexPathNotificationMapping count] == 0)
+- (NSInteger)originalSectionIndexForIndex:(NSInteger)sectionIndex {
+    if (self.indexPathNotificationMapping == nil || self.indexPathNotificationMapping.count == 0) {
         return sectionIndex;
+    }
     
     NSIndexPath *oldIndexPath = [self.indexPathNotificationMapping objectForKey:[NSIndexPath indexPathForItem:-1 inSection:sectionIndex]];
-    if (oldIndexPath != nil)
+    if (oldIndexPath != nil) {
         return oldIndexPath.section;
+    }
     
     return sectionIndex;
 }
 
-- (void)notifyReload
-{
-    if (![self areUpdatesEnabled])
+- (void)notifyReload {
+    
+    if (![self areUpdatesEnabled]) {
         return;
+    }
     
     // the only one we can send without being fully loaded
     id<UAFilterableResultsControllerDelegate> delegate = self.delegate;
-    if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerShouldReload:)])
+    if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerShouldReload:)]) {
         [delegate filterableResultsControllerShouldReload:self];
+    }
 }
 
-- (void)endUpdates
-{
+- (void)endUpdates {
+    
     [self notifyEndChanges];
 }
 
-- (void)notifyEndChanges
-{
-    if (![self areUpdatesEnabled])
+- (void)notifyEndChanges {
+    
+    if (![self areUpdatesEnabled]) {
         return;
+    }
     
     // not until we've loaded
-    if (![self tableViewHasLoaded])
+    if (![self tableViewHasLoaded]) {
         return;
+    }
 
-    if (self.changeBatches > 0)
-        [self setChangeBatches:(self.changeBatches - 1)];
+    if (self.changeBatches > 0) {
+        self.changeBatches = (self.changeBatches - 1);
+    }
 //    NSLog(@"Change batches: %li", (long)self.changeBatches);
 
     // we only notify for the outer one, not the inner ones
-    if (self.changeBatches == 0)
-    {
-        if (self.appliedFilters != nil && [self.appliedFilters count] > 0)
-        {
+    if (self.changeBatches == 0) {
+        
+        if (self.appliedFilters != nil && self.appliedFilters.count > 0) {
+            
             // increment it again lest the count is out
-            [self setChangeBatches:1];
+            self.changeBatches = 1;
 
             // reapply filters
             [self reapplyFilters];
 
             // increment it again lest the count is out
-            [self setChangeBatches:0];
+            self.changeBatches = 0;
         }
         
-        [self setIndexPathNotificationMapping:nil];
+        self.indexPathNotificationMapping = nil;
 
         // Notify the delegate of the impending change
         id delegate = self.delegate;
-        if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerDidChangeContent:)])
+        if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerDidChangeContent:)]) {
             [delegate filterableResultsControllerDidChangeContent:self];
+        }
     }
 }
 
-- (void)notifyEndChangesButDontReapplyFilters
-{
-    if (![self areUpdatesEnabled])
+- (void)notifyEndChangesButDontReapplyFilters {
+    if (![self areUpdatesEnabled]) {
         return;
+    }
     
     // not until we've loaded
-    if (![self tableViewHasLoaded])
+    if (![self tableViewHasLoaded]) {
         return;
+    }
     
-    if (self.changeBatches > 0)
-        [self setChangeBatches:(self.changeBatches - 1)];
+    if (self.changeBatches > 0) {
+        self.changeBatches = (self.changeBatches - 1);
+    }
     
     // we only notify for the outer one, not the inner ones
-    if (self.changeBatches == 0)
-    {
+    if (self.changeBatches == 0) {
         // Notify the delegate of the impending change
         id delegate = self.delegate;
-        if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerDidChangeContent:)])
+        if (delegate != nil && [delegate respondsToSelector:@selector(filterableResultsControllerDidChangeContent:)]) {
             [delegate filterableResultsControllerDidChangeContent:self];
+        }
     }
 }
 
-- (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray
-{
-    if (![self areUpdatesEnabled])
+- (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray {
+    if (![self areUpdatesEnabled]) {
         return;
+    }
     
     // do we have a primary key? we use an optimised version of this approach if so.
-    if (self.primaryKeyPath != nil)
-    {
+    if (self.primaryKeyPath != nil) {
         [self notifyForChangesFrom:fromArray to:toArray usingKeyPath:self.primaryKeyPath];
         return;
     }
 
     // we need to make sure they're both 2 dimensional
-    if (![self isArrayTwoDimensional:fromArray])
+    if (![self isArrayTwoDimensional:fromArray]) {
         fromArray = @[ fromArray ];
-    if (![self isArrayTwoDimensional:toArray])
+    }
+    if (![self isArrayTwoDimensional:toArray]) {
         toArray = @[ toArray ];
+    }
     
     // move everything that exists in both arrays into a mutable array, notify for all the others
-    NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:[fromArray count]];
-    for (NSUInteger sectionIndex = 0; sectionIndex < [fromArray count]; sectionIndex++)
-    {
-        NSArray *section = [fromArray objectAtIndex:sectionIndex];
+    NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:fromArray.count];
+    for (NSUInteger sectionIndex = 0; sectionIndex < fromArray.count; sectionIndex++) {
+        
+        NSArray *section = fromArray[sectionIndex];
         NSMutableArray *newSection = [[NSMutableArray alloc] initWithCapacity:0];
-        for (NSUInteger rowIndex = 0; rowIndex < [section count]; rowIndex++)
-        {
-            id obj = [section objectAtIndex:rowIndex];
+        for (NSUInteger rowIndex = 0; rowIndex < section.count; rowIndex++) {
+            
+            id obj = section[rowIndex];
 
             // if it exists in the target we add it
-            if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:nil] != nil)
+            if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:nil] != nil) {
                 [newSection addObject:obj];
+            }
             
             // otherwise, we notify about it
-            else
-                [self notifyChangedObject:obj atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeDelete newIndexPath:nil];
+            else {
+                [self notifyChangedObject:obj
+                              atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]
+                            forChangeType:UAFilterableResultsChangeDelete newIndexPath:nil];
+            }
         }
         
         [fromMutable addObject:newSection];
@@ -1237,92 +1216,104 @@
     }
 
     // now that thats over, we need to loop over the target array and note anything that isn't in the same place as last time
-    for (NSUInteger sectionIndex = 0; sectionIndex < [toArray count]; sectionIndex++)
-    {
+    for (NSUInteger sectionIndex = 0; sectionIndex < toArray.count; sectionIndex++) {
         // now loop over the section
-        NSArray *section = [toArray objectAtIndex:sectionIndex];
-        for (NSUInteger rowIndex = 0; rowIndex < [section count]; rowIndex++)
-        {
-            id obj = [section objectAtIndex:rowIndex];
+        NSArray *section = toArray[sectionIndex];
+        for (NSUInteger rowIndex = 0; rowIndex < section.count; rowIndex++) {
+            
+            id obj = section[rowIndex];
             
             // alrighty, does this object exist in the old one?
             NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromArray usingKeyPath:nil];
-            if (pathInExisting == nil)
-            {
+            if (pathInExisting == nil) {
                 // nope, lets notify about it
-                [self notifyChangedObject:obj atIndexPath:nil forChangeType:UAFilterableResultsChangeInsert newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+                [self notifyChangedObject:obj
+                              atIndexPath:nil
+                            forChangeType:UAFilterableResultsChangeInsert
+                             newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
                 
                 // does this section exist?
-                if (sectionIndex+1 > [fromMutable count])
+                if (sectionIndex+1 > fromMutable.count) {
                     [fromMutable addObject:[[NSMutableArray alloc] initWithCapacity:0]];
+                }
                 
                 NSMutableArray *fromSection = [fromMutable objectAtIndex:sectionIndex];
                 [fromSection insertObject:obj atIndex:rowIndex];
 
                 // is it the same as where we are now?
-            } else if (pathInExisting.section == (NSInteger)sectionIndex && pathInExisting.row == (NSInteger)rowIndex)
-                [self notifyChangedObject:obj atIndexPath:[self indexPathOfObject:obj inArray:fromArray usingKeyPath:nil] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
-        
-            // nope, tell them where it is now
-            else
-                [self notifyChangedObject:obj atIndexPath:pathInExisting forChangeType:UAFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+            } else if (pathInExisting.section == (NSInteger)sectionIndex && pathInExisting.row == (NSInteger)rowIndex) {
+                
+                [self notifyChangedObject:obj
+                              atIndexPath:[self indexPathOfObject:obj inArray:fromArray usingKeyPath:nil]
+                            forChangeType:UAFilterableResultsChangeUpdate
+                             newIndexPath:nil];
+                
+            } else { // nope, tell them where it is now
+                [self notifyChangedObject:obj
+                              atIndexPath:pathInExisting
+                            forChangeType:UAFilterableResultsChangeMove
+                             newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+            }
         }
     }
 }
 
-- (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray usingKeyPath:(NSString *)keyPath
-{
-    if (![self areUpdatesEnabled])
+- (void)notifyForChangesFrom:(NSArray *)fromArray to:(NSArray *)toArray usingKeyPath:(NSString *)keyPath {
+    if (![self areUpdatesEnabled]) {
         return;
+    }
     
     // we need to make sure they're both 2 dimensional
-    if (![self isArrayTwoDimensional:fromArray])
+    if (![self isArrayTwoDimensional:fromArray]) {
         fromArray = @[ fromArray ];
-    if (![self isArrayTwoDimensional:toArray])
+    }
+    if (![self isArrayTwoDimensional:toArray]) {
         toArray = @[ toArray ];
+    }
     
     // refine it down to just the key paths, if an exception is thrown anywhere there we fall back to the non-optimised method
     NSArray *originalFromArray = [fromArray copy];
     NSArray *originalToArray = [toArray copy];
-    @try
-    {
+    @try {
         fromArray = [fromArray valueForKeyPath:keyPath];
         toArray = [toArray valueForKeyPath:keyPath];
         keyPath = nil;
 
-    } @catch (NSException *exception)
-    {
+    } @catch (NSException *exception) {
         // go back to the originals
         fromArray = originalFromArray;
         toArray = originalToArray;
     }
 
     // copy the primary keys from everything that exists in both arrays into a mutable array, notify for all the others
-    NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:[fromArray count]];
-    for (NSUInteger sectionIndex = 0; sectionIndex < [fromArray count]; sectionIndex++)
-    {
+    NSMutableArray *fromMutable = [[NSMutableArray alloc] initWithCapacity:fromArray.count];
+    for (NSUInteger sectionIndex = 0; sectionIndex < fromArray.count; sectionIndex++) {
+        
         // does this section exist in the target?
-        if (sectionIndex >= [toArray count])
-        {
+        if (sectionIndex >= toArray.count) {
             // nope, deleted
             [self notifyChangedSectionAtIndex:sectionIndex forChangeType:UAFilterableResultsChangeDelete];
             continue;
         }
         
-        NSArray *section = [fromArray objectAtIndex:sectionIndex];
-        NSArray *originalSection = [originalFromArray objectAtIndex:sectionIndex];
+        NSArray *section = fromArray[sectionIndex];
+        NSArray *originalSection = originalFromArray[sectionIndex];
         NSMutableArray *newSection = [[NSMutableArray alloc] initWithCapacity:0];
-        for (NSUInteger rowIndex = 0; rowIndex < [section count]; rowIndex++)
-        {
-            id obj = [section objectAtIndex:rowIndex];
+        for (NSUInteger rowIndex = 0; rowIndex < section.count; rowIndex++) {
+            id obj = section[rowIndex];
             
             // if it exists in the target we add it
-            if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:keyPath] != nil)
+            if ([self indexPathOfObject:obj inArray:toArray usingKeyPath:keyPath] != nil) {
                 [newSection addObject:obj];
+            }
             
             // otherwise, we notify about it
-            else
-                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex] forChangeType:UAFilterableResultsChangeDelete newIndexPath:nil];
+            else {
+                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex]
+                              atIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]
+                            forChangeType:UAFilterableResultsChangeDelete
+                             newIndexPath:nil];
+            }
         }
         
         [fromMutable addObject:newSection];
@@ -1330,89 +1321,101 @@
     }
     
     // now that thats over, we need to loop over the target array and note anything that isn't in the same place as last time
-    for (NSUInteger sectionIndex = 0; sectionIndex < [toArray count]; sectionIndex++)
-    {
+    for (NSUInteger sectionIndex = 0; sectionIndex < toArray.count; sectionIndex++) {
         // does this section exist in the source?
-        if (sectionIndex >= [fromArray count])
-        {
+        if (sectionIndex >= fromArray.count) {
             // nope, lets just add the whole thing in
             [self notifyChangedSectionAtIndex:sectionIndex forChangeType:UAFilterableResultsChangeInsert];
             continue;
         }
         
         // now loop over the section
-        NSArray *section = [toArray objectAtIndex:sectionIndex];
-        NSArray *originalSection = [originalToArray objectAtIndex:sectionIndex];
-        for (NSUInteger rowIndex = 0; rowIndex < [section count]; rowIndex++)
-        {
-            id obj = [section objectAtIndex:rowIndex];
+        NSArray *section = toArray[sectionIndex];
+        NSArray *originalSection = originalToArray[sectionIndex];
+        for (NSUInteger rowIndex = 0; rowIndex < section.count; rowIndex++) {
+            
+            id obj = section[rowIndex];
             
             // alrighty, does this object exist in the old one?
             NSIndexPath *pathInExisting = [self indexPathOfObject:obj inArray:fromMutable usingKeyPath:keyPath];
-            if (pathInExisting == nil)
-            {
+            if (pathInExisting == nil) {
+                
                 // nope, lets notify about it
-                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:nil forChangeType:UAFilterableResultsChangeInsert newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+                [self notifyChangedObject:originalSection[rowIndex]
+                              atIndexPath:nil
+                            forChangeType:UAFilterableResultsChangeInsert
+                             newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
                 
                 // does this section exist?
-                if (sectionIndex+1 > [fromMutable count])
+                if (sectionIndex+1 > fromMutable.count) {
                     [fromMutable addObject:[[NSMutableArray alloc] initWithCapacity:0]];
+                }
                 
-                NSMutableArray *fromSection = [fromMutable objectAtIndex:sectionIndex];
+                NSMutableArray *fromSection = fromMutable[sectionIndex];
                 [fromSection insertObject:obj atIndex:rowIndex];
                 
             // is it the same as where we are now?
-            } else if (pathInExisting.section == (NSInteger)sectionIndex && pathInExisting.row == (NSInteger)rowIndex)
-                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:[self indexPathOfObject:obj inArray:fromArray usingKeyPath:keyPath] forChangeType:UAFilterableResultsChangeUpdate newIndexPath:nil];
+            } else if (pathInExisting.section == (NSInteger)sectionIndex && pathInExisting.row == (NSInteger)rowIndex) {
+                [self notifyChangedObject:originalSection[rowIndex]
+                              atIndexPath:[self indexPathOfObject:obj inArray:fromArray usingKeyPath:keyPath]
+                            forChangeType:UAFilterableResultsChangeUpdate
+                             newIndexPath:nil];
+            }
             
             // nope, tell them where it is now
-            else
-                [self notifyChangedObject:[originalSection objectAtIndex:rowIndex] atIndexPath:pathInExisting forChangeType:UAFilterableResultsChangeMove newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+            else {
+                [self notifyChangedObject:originalSection[rowIndex]
+                              atIndexPath:pathInExisting forChangeType:UAFilterableResultsChangeMove
+                             newIndexPath:[NSIndexPath indexPathForRow:(NSInteger)rowIndex inSection:(NSInteger)sectionIndex]];
+            }
         }
     }
 }
 
 #pragma mark - Forwarding for unsupported Data Source Methods
 
-- (BOOL)respondsToSelector:(SEL)aSelector
-{
-    if ([super respondsToSelector:aSelector])
+- (BOOL)respondsToSelector:(SEL)aSelector {
+    if ([super respondsToSelector:aSelector]) {
         return YES;
+    }
     
     // if we don't support it but it is an obvious UICollectionViewDataSource or UITableViewDataSource method we should try forwarding it
     id delegate = self.delegate;
     
     // nothing to forward to
-    if (delegate == nil)
+    if (delegate == nil) {
         return NO;
+    }
     
     NSString *selectorName = NSStringFromSelector(aSelector);
-    if ([selectorName rangeOfString:@"tableView:"].location == 0 || [selectorName rangeOfString:@"collectionView:"].location == 0)
-    {
+    if ([selectorName rangeOfString:@"tableView:"].location == 0 || [selectorName rangeOfString:@"collectionView:"].location == 0) {
+        
         // it is for a collection view or table view method, see if we can pass it
-        if ([delegate respondsToSelector:aSelector])
+        if ([delegate respondsToSelector:aSelector]) {
             return YES;
+        }
     }
     
     // nothing supported
     return NO;
 }
 
-- (id)forwardingTargetForSelector:(SEL)aSelector
-{
+- (id)forwardingTargetForSelector:(SEL)aSelector {
     // if we don't support it but it is an obvious UICollectionViewDataSource or UITableViewDataSource method we should try forwarding it
     id delegate = self.delegate;
     
     // nothing to forward to
-    if (delegate == nil)
+    if (delegate == nil) {
         return nil;
+    }
     
     NSString *selectorName = NSStringFromSelector(aSelector);
     if ([selectorName rangeOfString:@"tableView:"].location == 0 || [selectorName rangeOfString:@"collectionView:"].location == 0)
     {
         // it is for a collection view or table view method, see if we can pass it
-        if ([delegate respondsToSelector:aSelector])
+        if ([delegate respondsToSelector:aSelector]) {
             return delegate;
+        }
     }
     
     // nothing supported
@@ -1420,4 +1423,4 @@
 }
 
 @end
-
+NS_ASSUME_NONNULL_END
